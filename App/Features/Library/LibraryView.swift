@@ -63,7 +63,6 @@ struct LibraryView: View {
                 HStack(spacing:12) {
                     Image("JumpRopeLogo").resizable().scaledToFit()
                         .frame(width:52,height:52)
-                        .clipShape(RoundedRectangle(cornerRadius:12))
                         .accessibilityLabel("줄넘기와 재생 버튼을 담은 JUMPROPE PLAYER 로고")
                     VStack(alignment:.leading,spacing:3) {
                         Text("JUMPROPE").font(.system(size:17,weight:.bold))
