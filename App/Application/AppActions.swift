@@ -6,5 +6,6 @@ final class AppActions {
     var importKind: ImportKind = .media
     var showImporter = false
     var showExporter = false
+    var showTutorial = false
     func open(_ kind: ImportKind) { importKind = kind; showImporter = true }
 }

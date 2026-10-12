@@ -6,6 +6,7 @@ struct RootView: View {
     @Environment(PracticeSession.self) private var session
     @Environment(AppActions.self) private var actions
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("hasSeenGettingStartedTutorial") private var hasSeenTutorial = false
     @State private var visibility: NavigationSplitViewVisibility = .all
     @State private var deleteID: UUID?
     @State private var pendingBackup: BackupPayload?
@@ -40,6 +41,13 @@ struct RootView: View {
         #endif
         .tint(.blue)
         .onChange(of: session.focus) { _, value in visibility = value ? .detailOnly : .all }
+        .sheet(isPresented: $actions.showTutorial, onDismiss: { hasSeenTutorial = true }) {
+            TutorialView()
+                #if os(iOS)
+                .presentationDetents([.large])
+                #endif
+        }
+        .task { if !hasSeenTutorial { actions.showTutorial = true } }
         .sheet(isPresented: $session.showSettings) { SettingsView().frame(minWidth: 360, idealWidth: 520, minHeight: 540) }
         #if os(iOS)
         .sheet(isPresented: $session.showEditor, onDismiss: { session.editing = false }) { EditorView().presentationDetents([.large]) }
@@ -76,7 +84,8 @@ struct RootView: View {
         .onChange(of: library.data.settings) { _, _ in library.save() }
         #if os(macOS)
         .onExitCommand {
-            if session.editing && !session.undo.isEmpty { session.undoEdit() }
+            if actions.showTutorial { actions.showTutorial = false }
+            else if session.editing && !session.undo.isEmpty { session.undoEdit() }
             else { session.showEditor = false; session.editing = false; session.showSettings = false; session.focus = false }
         }
         #endif
