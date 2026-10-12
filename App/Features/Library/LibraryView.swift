@@ -61,10 +61,10 @@ struct LibraryView: View {
         VStack(spacing:0) {
             VStack(spacing:16) {
                 HStack(spacing:12) {
-                    Image("SeolinLogo").resizable().scaledToFit()
-                        .frame(width:36,height:34).padding(8)
-                        .background(selectionColor,in:RoundedRectangle(cornerRadius:12))
-                        .accessibilityLabel("서린태권도 로고")
+                    Image("JumpRopeLogo").resizable().scaledToFit()
+                        .frame(width:52,height:52)
+                        .clipShape(RoundedRectangle(cornerRadius:12))
+                        .accessibilityLabel("줄넘기와 재생 버튼을 담은 JUMPROPE PLAYER 로고")
                     VStack(alignment:.leading,spacing:3) {
                         Text("JUMPROPE").font(.system(size:17,weight:.bold))
                         Text("PLAYER by SEOLIN").font(.system(size:11,weight:.medium)).foregroundStyle(detailColor)
