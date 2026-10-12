@@ -34,10 +34,11 @@ struct SettingsView: View {
                     Text("음악과 동작을 연결하는 줄넘기 연습 공간").font(.caption).foregroundStyle(.secondary)
                     Link("서린태권도 Instagram",destination:URL(string:"https://www.instagram.com/seolin5_tkd/")!)
                 }
-            }.formStyle(.grouped)
+            }.formStyle(.grouped).focusedValue(\.editingRoutineText, true)
         }
         .onChange(of: library.data.settings) { _,value in
-            if !value.autoGap.isFinite || value.autoGap < 0 { library.data.settings.autoGap = 0 }
+            if !value.autoGap.isFinite { library.data.settings.autoGap = 0 }
+            else if !(0...86_400).contains(value.autoGap) { library.data.settings.autoGap = min(86_400,max(0,value.autoGap)) }
             library.save()
         }
     }

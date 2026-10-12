@@ -10,12 +10,14 @@ final class LibraryStore {
     private var scopes: [URL] = []
     private var rescanning = false
     private var saveDisabled = false
+    private var revision = UUID()
+    private var lastSaved: Data?
     init(storage: URL? = nil) {
         self.storage = storage ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Seolin/JumpRopePlayer/library.json")
         do {
             if FileManager.default.fileExists(atPath: self.storage.path) {
                 let decoded = try JSONDecoder().decode(LibrarySnapshot.self, from: Data(contentsOf: self.storage))
-                guard decoded.version == 1 else { throw CocoaError(.fileReadCorruptFile) }
+                try decoded.validate()
                 data = decoded
             }
         } catch {
@@ -28,14 +30,28 @@ final class LibraryStore {
     func save() {
         guard !saveDisabled else { return }
         do {
+            try data.validate()
             try FileManager.default.createDirectory(at: storage.deletingLastPathComponent(), withIntermediateDirectories: true)
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            try encoder.encode(data).write(to: storage, options: .atomic)
+            let bytes = try encoder.encode(data)
+            guard bytes != lastSaved else { return }
+            try bytes.write(to: storage, options: .atomic)
+            lastSaved = bytes
         } catch { notice = "저장 실패: \(error.localizedDescription)" }
     }
     func access(_ url: URL) {
-        guard !scopes.contains(url) else { return }
+        guard url.isFileURL, !scopes.contains(url) else { return }
         if url.startAccessingSecurityScopedResource() { scopes.append(url) }
+    }
+    func readImport(_ url: URL, maximumBytes: Int = 100 * 1024 * 1024) throws -> Data {
+        guard url.isFileURL else { throw BackupError.invalid }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+        guard size <= maximumBytes else { throw BackupError.invalid }
+        let bytes = try Data(contentsOf: url, options: .mappedIfSafe)
+        guard bytes.count <= maximumBytes else { throw BackupError.invalid }
+        return bytes
     }
     func bookmark(_ url: URL) -> Data? {
         #if os(macOS)
@@ -44,20 +60,25 @@ final class LibraryStore {
         return try? url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
         #endif
     }
-    private func resolve(_ value: Data?, fallback: URL) -> URL {
-        guard let value else { return fallback }
+    private func resolve(_ value: inout Data?, fallback: URL) -> URL {
+        guard let saved = value else { return fallback }
         var stale = false
         #if os(macOS)
         let options: URL.BookmarkResolutionOptions = [.withSecurityScope, .withoutUI]
         #else
         let options: URL.BookmarkResolutionOptions = [.withoutUI]
         #endif
-        return (try? URL(resolvingBookmarkData: value, options: options, relativeTo: nil, bookmarkDataIsStale: &stale)) ?? fallback
+        guard let url = try? URL(resolvingBookmarkData: saved, options: options, relativeTo: nil, bookmarkDataIsStale: &stale) else { return fallback }
+        access(url)
+        if stale, let refreshed = bookmark(url) { value = refreshed }
+        return url
     }
     func restoreAccess() {
         unavailableSources.removeAll()
         for index in data.sources.indices {
-            let url = resolve(data.sources[index].bookmark, fallback: data.sources[index].url)
+            var saved = data.sources[index].bookmark
+            let url = resolve(&saved, fallback: data.sources[index].url)
+            data.sources[index].bookmark = saved
             data.sources[index].url = url; access(url)
             if !FileManager.default.isReadableFile(atPath: url.path) { unavailableSources.insert(data.sources[index].id) }
         }
@@ -65,17 +86,20 @@ final class LibraryStore {
             if let sourceID = data.tracks[index].sourceID, let source = data.sources.first(where: { $0.id == sourceID }) {
                 data.tracks[index].url = source.url.appendingPathComponent(data.tracks[index].relativePath)
             } else {
-                let url = resolve(data.tracks[index].bookmark, fallback: data.tracks[index].url)
+                var saved = data.tracks[index].bookmark
+                let url = resolve(&saved, fallback: data.tracks[index].url)
+                data.tracks[index].bookmark = saved
                 data.tracks[index].url = url; access(url)
             }
             data.tracks[index].missing = !FileManager.default.isReadableFile(atPath: data.tracks[index].url.path)
         }
     }
-    func addFiles(_ urls: [URL], source: MediaSource? = nil, explicit: Bool = true) -> [UUID] {
+    func addFiles(_ urls: [URL], source: MediaSource? = nil, explicit: Bool = true, persist: Bool = true) -> [UUID] {
         var ids: [UUID] = []
         for url in urls {
-            guard MediaTrack.extensions.contains(url.pathExtension.lowercased()) else { continue }
+            guard url.isFileURL, MediaTrack.extensions.contains(url.pathExtension.lowercased()) else { continue }
             if source == nil { access(url) }
+            guard FileManager.default.isReadableFile(atPath: url.path) else { continue }
             if let index = data.tracks.firstIndex(where: { $0.url.standardizedFileURL == url.standardizedFileURL }) {
                 if explicit { data.tracks[index].hidden = false }
                 data.tracks[index].missing = false; ids.append(data.tracks[index].id); continue
@@ -86,9 +110,11 @@ final class LibraryStore {
             if let previous = data.tracks.first(where: { $0.legacyKey == track.legacyKey }) { track.routineID = previous.routineID }
             data.tracks.append(track); ids.append(track.id)
         }
-        applyLegacy(); save(); return ids
+        applyLegacy(); if persist { save() }; return ids
     }
     func addFolder(_ url: URL, replacing: UUID? = nil) async {
+        guard url.isFileURL else { return }
+        revision = UUID()
         access(url)
         if let replacing, let i = data.sources.firstIndex(where: { $0.id == replacing }) {
             data.sources[i].url = url; data.sources[i].bookmark = bookmark(url)
@@ -102,6 +128,7 @@ final class LibraryStore {
     }
     func rescan(preserving: UUID? = nil) async {
         guard !rescanning else { return }; rescanning = true; defer { rescanning = false }
+        let expectedRevision = revision
         for source in data.sources {
             guard !unavailableSources.contains(source.id) else { continue }
             let result: [URL]? = await Task.detached {
@@ -110,8 +137,9 @@ final class LibraryStore {
                 let urls = walker.compactMap { $0 as? URL }.filter { MediaTrack.extensions.contains($0.pathExtension.lowercased()) && ((try? $0.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? false) }
                 return failed ? nil : urls
             }.value
+            guard revision == expectedRevision, !Task.isCancelled else { return }
             guard let urls = result else { unavailableSources.insert(source.id); continue }
-            _ = addFiles(urls, source: source, explicit: false)
+            _ = addFiles(urls, source: source, explicit: false, persist: false)
             let paths = Set(urls.map(\.path))
             for i in data.tracks.indices where data.tracks[i].sourceID == source.id && data.tracks[i].id != preserving { data.tracks[i].missing = !paths.contains(data.tracks[i].url.path) }
         }
@@ -128,9 +156,14 @@ final class LibraryStore {
             let copy = storage.deletingLastPathComponent().appendingPathComponent("before-import-\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(4)).json")
             try FileManager.default.copyItem(at:storage,to:copy)
         }
+        revision = UUID()
         saveDisabled = false
+        lastSaved = nil
         switch payload {
-        case .native(let snapshot): data = snapshot; restoreAccess()
+        case .native(let snapshot):
+            try snapshot.validate()
+            for url in scopes { url.stopAccessingSecurityScopedResource() }; scopes.removeAll()
+            data = snapshot; restoreAccess()
         case .legacy(let archive): data.pendingLegacy = archive; applyLegacy()
         }
         save()
@@ -166,7 +199,8 @@ final class LibraryStore {
     }
     func remove(_ id: UUID) { if let i = data.tracks.firstIndex(where: { $0.id == id }) { data.tracks[i].hidden = true; save() } }
     func reconnect(_ id: UUID, to url: URL) {
-        guard let i = data.tracks.firstIndex(where: { $0.id == id }) else { return }
+        guard url.isFileURL, MediaTrack.extensions.contains(url.pathExtension.lowercased()),
+              let i = data.tracks.firstIndex(where: { $0.id == id }) else { notice = "지원하는 로컬 음원·영상을 선택해 주세요."; return }
         access(url)
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         let replacement = MediaTrack(url: url, size: size, bookmark: bookmark(url))
@@ -176,9 +210,11 @@ final class LibraryStore {
         data.tracks[i].isVideo = replacement.isVideo; data.tracks[i].missing = false; save()
     }
     func forgetFolders() {
+        revision = UUID()
         data.sources.removeAll()
         for i in data.tracks.indices where data.tracks[i].sourceID != nil {
             data.tracks[i].bookmark = bookmark(data.tracks[i].url); data.tracks[i].sourceID = nil
+            data.tracks[i].relativePath = data.tracks[i].url.lastPathComponent
         }
         unavailableSources.removeAll(); save()
     }

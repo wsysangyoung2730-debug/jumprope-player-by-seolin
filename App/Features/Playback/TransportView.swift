@@ -27,10 +27,16 @@ struct TransportView: View {
         }.buttonStyle(.plain).disabled(session.selectedID == nil)
     }
     private var repeats: some View {
+        ViewThatFits {
+            repeatButtons.labelStyle(.titleAndIcon)
+            repeatButtons.labelStyle(.iconOnly)
+        }
+    }
+    private var repeatButtons: some View {
         HStack(spacing:10) {
             Button { library.data.settings.repeatMode = library.data.settings.repeatMode == .all ? .off : .all } label: { Label("전체 반복",systemImage:"repeat") }.tint(library.data.settings.repeatMode == .all ? .blue : .secondary)
             Button { library.data.settings.repeatMode = library.data.settings.repeatMode == .one ? .off : .one } label: { Label("1곡 반복",systemImage:"repeat.1") }.tint(library.data.settings.repeatMode == .one ? .blue : .secondary)
-            Button { session.toggleLoop() } label: { Label("구간 반복",systemImage:"arrow.trianglehead.2.clockwise.rotate.90") }.tint(session.loopEnabled ? .orange : .secondary)
+            Button { session.toggleLoop() } label: { Label("구간 반복",systemImage:"repeat.circle") }.tint(session.loopEnabled ? .orange : .secondary)
         }.buttonStyle(.bordered).controlSize(.regular)
     }
 }

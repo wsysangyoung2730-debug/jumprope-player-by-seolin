@@ -28,6 +28,26 @@ import AVFoundation
         precondition(restored.data.tracks[0].favorite)
         precondition(restored.routine(for:restored.data.tracks[0]).moves.map(\.time) == [1,6,11])
         library.remove(ids[0]); precondition(FileManager.default.fileExists(atPath:file.path))
-        print("PASS: WAV metadata, playback, sync, undo, loop, persistence, favorite, non-destructive removal")
+        session.resetSelection()
+        session.select(ids[0], play: true)
+        session.resetSelection()
+        try await Task.sleep(for: .milliseconds(200))
+        precondition(session.selectedID == nil && !session.loading && !session.playing && session.duration == 0)
+        let broken = storage.deletingLastPathComponent().appendingPathComponent("broken.wav")
+        try Data([0, 1, 2]).write(to: broken)
+        let brokenID = library.addFiles([broken])[0]
+        session.select(brokenID, play: true)
+        for _ in 0..<100 { if !session.loading { break }; try await Task.sleep(for: .milliseconds(50)) }
+        session.resume()
+        precondition(!session.playing && session.duration == 0, "Failed media must not look like it is playing")
+        let folder = storage.deletingLastPathComponent().appendingPathComponent("music")
+        let nested = folder.appendingPathComponent("lesson")
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: file, to: nested.appendingPathComponent("nested.wav"))
+        await library.addFolder(folder)
+        library.forgetFolders()
+        precondition(library.orderedTracks().contains { $0.name == "nested" }, "Forgetting a folder must not hide its files in an unreachable subfolder")
+        precondition(library.notice?.hasPrefix("저장 실패") != true)
+        print("PASS: cancellation, failed-media guard, folder detach,  WAV metadata, playback, sync, undo, loop, persistence, favorite, non-destructive removal")
     }
 }

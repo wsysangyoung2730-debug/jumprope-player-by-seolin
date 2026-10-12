@@ -5,6 +5,10 @@ struct JumpRopePlayerApp: App {
     @State private var library: LibraryStore
     @State private var session: PracticeSession
     @State private var actions = AppActions()
+    @FocusedValue(\.editingRoutineText) private var editingText
+    private var commandsBlocked: Bool {
+        actions.showTutorial || session.showSettings || actions.showImporter || actions.showExporter || editingText == true
+    }
     init() {
         let store: LibraryStore
         #if DEBUG
@@ -42,7 +46,7 @@ struct JumpRopePlayerApp: App {
                 Button("파일 추가…") { actions.open(.media) }.keyboardShortcut("o")
                 Button("음원 폴더 열기…") { actions.open(.folder) }.keyboardShortcut("o", modifiers: [.command,.shift])
                 Button("순서표 텍스트 불러오기…") { actions.open(.text) }.disabled(session.selectedID == nil)
-            }.disabled(actions.showTutorial)
+            }.disabled(commandsBlocked)
         }
         CommandMenu("재생") {
             Group {
@@ -54,7 +58,7 @@ struct JumpRopePlayerApp: App {
                 Button("이전 동작") { session.step(-1) }.keyboardShortcut(.upArrow, modifiers: [])
                 Button("다음 동작") { session.step(1) }.keyboardShortcut(.downArrow, modifiers: [])
                 Button("구간 반복") { session.toggleLoop() }.keyboardShortcut("l")
-            }.disabled(actions.showTutorial)
+            }.disabled(commandsBlocked)
         }
         CommandMenu("순서표") {
             Group {
@@ -62,14 +66,14 @@ struct JumpRopePlayerApp: App {
                 Button("지금 싱크 찍기") { session.mark() }.keyboardShortcut(.return, modifiers: []).disabled(!session.editing)
                 Button("싱크 실행 취소") { session.undoEdit() }.keyboardShortcut("z").disabled(session.undo.isEmpty)
                 Button("음원·영상 연결…") { actions.open(.link) }.disabled(session.selectedID == nil)
-                Button("목록에서 제외") { if let id = session.selectedID { session.remove(id) } }.keyboardShortcut(.delete, modifiers: [])
-            }.disabled(actions.showTutorial)
+                Button("목록에서 제외") { if let id = session.selectedID { session.remove(id) } }.keyboardShortcut(.delete, modifiers: [.command])
+            }.disabled(commandsBlocked)
         }
         CommandMenu("연습 화면") {
             Group {
                 Button(session.focus ? "기본 화면" : "집중 보기") { session.focus.toggle() }.keyboardShortcut("f", modifiers: [.command,.shift])
                 Link("서린태권도 Instagram", destination: URL(string:"https://www.instagram.com/seolin5_tkd/")!)
-            }.disabled(actions.showTutorial)
+            }.disabled(commandsBlocked)
         }
     }
 }

@@ -32,6 +32,7 @@ final class PracticeSession {
     private var countdownTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
     private var sound: AVAudioPlayer?
+    private var audioObservers: [NSObjectProtocol] = []
     private var lastBeep: Int?
     private var previousActive: Int?
     var track: MediaTrack? { library.data.tracks.first { $0.id == selectedID } }
@@ -42,7 +43,16 @@ final class PracticeSession {
         self.library = library
         #if os(iOS)
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        try? AVAudioSession.sharedInstance().setActive(true)
+        for name in [AVAudioSession.interruptionNotification, AVAudioSession.routeChangeNotification, AVAudioSession.mediaServicesWereResetNotification] {
+            audioObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                let interruption = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+                let route = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
+                let shouldPause = name == AVAudioSession.mediaServicesWereResetNotification ||
+                    (name == AVAudioSession.interruptionNotification && interruption == AVAudioSession.InterruptionType.began.rawValue) ||
+                    (name == AVAudioSession.routeChangeNotification && route == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue)
+                if shouldPause { Task { @MainActor in self?.pause() } }
+            })
+        }
         #endif
         observer = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.03, preferredTimescale: 600), queue: .main) { [weak self] value in
             Task { @MainActor in self?.tick(value.seconds) }
@@ -55,7 +65,9 @@ final class PracticeSession {
     func select(_ id: UUID, play: Bool = true, favorites: Bool? = nil) {
         guard let item = library.data.tracks.first(where: { $0.id == id }), !item.missing else { library.notice = "원본 파일을 다시 연결해 주세요."; return }
         if let favorites { fromFavorites = favorites }
-        if id == selectedID { if play { resume() }; return }
+        if id == selectedID, player.currentItem?.status != .failed, duration > 0 {
+            if play { resume() }; return
+        }
         pause(); loadTask?.cancel(); clearLoop(); editing = false; undo = []; time = 0; duration = 0
         selectedID = id; routine = library.routine(for: item); markIndex = routine.moves.firstIndex(where: { $0.time == nil }) ?? 0
         loading = true; hasVideo = false
@@ -64,7 +76,9 @@ final class PracticeSession {
         player.replaceCurrentItem(with: avItem)
         errorObservation = avItem.observe(\.status, options: [.new]) { [weak self] item, _ in
             if item.status == .failed {
-                Task { @MainActor in self?.playing = false; self?.loading = false; self?.library.notice = "이 파일을 재생할 수 없습니다. MP3/M4A 또는 H.264·HEVC MP4/MOV로 변환해 주세요. \(item.error?.localizedDescription ?? "")" }
+                Task { @MainActor in
+                    guard let self, item === self.player.currentItem else { return }
+                    self.pause(); self.loading = false; self.duration = 0; self.library.notice = "이 파일을 재생할 수 없습니다. MP3/M4A 또는 H.264·HEVC MP4/MOV로 변환해 주세요. \(item.error?.localizedDescription ?? "")" }
             }
         }
         loadTask = Task { [weak self] in
@@ -77,24 +91,31 @@ final class PracticeSession {
                 self.duration = length; self.hasVideo = !videoTracks.isEmpty; self.loading = false
                 if play { self.resume() }
             } catch {
-                guard !Task.isCancelled else { return }
-                self?.loading = false; self?.library.notice = "재생 형식을 확인해 주세요: \(error.localizedDescription)"
+                guard let self, !Task.isCancelled, self.selectedID == id else { return }
+                self.pause(); self.loading = false; self.duration = 0; self.library.notice = "재생 형식을 확인해 주세요: \(error.localizedDescription)"
             }
         }
     }
     func toggle() { if playing || countdown != nil { pause() } else { resume() } }
     func resume() {
-        guard selectedID != nil, !loading else { return }
+        guard selectedID != nil, !loading, duration > 0, player.currentItem?.status != .failed else { return }
+        #if os(iOS)
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch { library.notice = "오디오 출력을 시작할 수 없습니다: \(error.localizedDescription)"; return }
+        #endif
         if loop != nil { startLoop() } else { if time >= duration && duration > 0 { seek(0) }; player.play(); playing = true }
     }
     func pause() { countdownTask?.cancel(); countdownTask = nil; countdown = nil; player.pause(); playing = false }
     func seek(_ value: Double, play: Bool = false) {
+        guard value.isFinite, duration > 0, !loading else { return }
         let value = max(0, min(value, duration))
         time = value; lastBeep = nil
         player.seek(to: CMTime(seconds: value, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
-        if play { player.play(); playing = true }
+        if play { resume() }
     }
-    func restart() { if loop != nil { startLoop() } else { seek(0, play: true) } }
+    func restart() { guard !loading, duration > 0 else { return }; if loop != nil { startLoop() } else { seek(0, play: true) } }
     var queue: [MediaTrack] {
         guard let track else { return [] }
         return library.orderedTracks(folder: track.folder, sourceID: track.sourceID, favorites: fromFavorites && track.favorite)
@@ -126,7 +147,7 @@ final class PracticeSession {
             previousActive = active; lastBeep = nil
         }
     }
-    func beginEditing() { showEditor = true; editing = true; markIndex = routine.moves.firstIndex(where: { $0.time == nil }) ?? 0 }
+    func beginEditing() { guard selectedID != nil else { return }; showEditor = true; editing = true; markIndex = routine.moves.firstIndex(where: { $0.time == nil }) ?? 0 }
     func change(_ operation: (inout Routine) -> Void, remember: Bool = true) {
         guard let selectedID else { library.notice = "먼저 곡을 선택해 주세요."; return }
         if remember { undo.append(routine) }
@@ -140,15 +161,15 @@ final class PracticeSession {
     }
     func setTime(_ index: Int, _ value: Double?) {
         guard routine.moves.indices.contains(index) else { return }
-        change { $0.moves[index].time = value.map { (max(0, $0) * 10).rounded() / 10 } }
+        guard value.map({ $0.isFinite }) ?? true else { return }
+        change { $0.moves[index].time = value.map { (min(duration > 0 ? duration : 31_536_000, max(0, $0)) * 10).rounded() / 10 } }
         markIndex = routine.moves.firstIndex(where: { $0.time == nil }) ?? routine.moves.count
     }
     func undoEdit() { guard let value = undo.popLast(), let selectedID else { return }; routine = value; library.updateRoutine(value, trackID: selectedID); markIndex = routine.moves.firstIndex(where: { $0.time == nil }) ?? 0 }
     func clearTimes() { change { value in for i in value.moves.indices { value.moves[i].time = nil } }; markIndex = 0; editing = true }
     func importText(_ url: URL) {
-        library.access(url)
         do {
-            guard let text = TextImport.decode(try Data(contentsOf: url)) else { throw CocoaError(.fileReadInapplicableStringEncoding) }
+            guard let text = TextImport.decode(try library.readImport(url, maximumBytes: 5 * 1024 * 1024)) else { throw CocoaError(.fileReadInapplicableStringEncoding) }
             let value = TextImport.routine(from: text, title: routine.title)
             change { current in current.title = value.title; current.moves = value.moves }; beginEditing()
         } catch { library.notice = "순서표를 읽지 못했습니다: \(error.localizedDescription)" }
@@ -157,9 +178,17 @@ final class PracticeSession {
     func remove(_ id: UUID) {
         let next = queue.first { $0.id != id }
         library.remove(id)
-        if id == selectedID { pause(); if let next { select(next.id, play: false) } else { player.replaceCurrentItem(with: nil); selectedID = nil; routine = Routine(); duration = 0; time = 0; clearLoop() } }
+        if id == selectedID { pause(); if let next { select(next.id, play: false) } else { resetSelection() } }
+    }
+    func resetSelection() {
+        pause(); loadTask?.cancel(); loadTask = nil; errorObservation = nil
+        clearLoop(); player.replaceCurrentItem(with: nil)
+        selectedID = nil; routine = Routine(); duration = 0; time = 0
+        loading = false; hasVideo = false; editing = false; showEditor = false
+        undo = []; markIndex = 0; previousActive = nil; lastBeep = nil
     }
     func pick(_ index: Int) {
+        guard routine.moves.indices.contains(index) else { return }
         if loopEnabled {
             if let span = routine.span(index, duration: duration) { pickRange(span) }
         } else if let value = routine.moves[index].time { seek(value, play: true) }
@@ -182,7 +211,7 @@ final class PracticeSession {
         loop = range; loopEnabled = true; installBoundary(); startLoop()
     }
     func adjustLoop(_ value: TimeRange) {
-        guard value.isValid else { return }; loop = value; installBoundary()
+        guard value.end <= duration, value.isValid else { return }; loop = value; installBoundary()
         if playing && (time < value.start || time >= value.end) { startLoop() }
     }
     func installBoundary() {
@@ -195,7 +224,7 @@ final class PracticeSession {
     func clearLoop() { loop = nil; loopEnabled = false; pendingRange = nil; countdownTask?.cancel(); countdownTask = nil; countdown = nil; installBoundary() }
     func toggleLoop() { if loopEnabled { clearLoop() } else if selectedID != nil { loopEnabled = true; library.notice = "순서표에서 시작·끝을 선택하거나 재생 막대를 드래그하세요." } }
     func startLoop() {
-        guard let loop else { return }
+        guard let loop, loop.isValid, loop.end <= duration, !loading, player.currentItem?.status != .failed else { return }
         pause(); let id = selectedID
         countdownTask = Task { [weak self] in
             guard let self else { return }
@@ -213,6 +242,10 @@ final class PracticeSession {
             guard !Task.isCancelled, self.selectedID == id, self.loop != nil else { return }
             self.countdown = 0
             if self.settings.loopSound { self.beep(high: true) }
+            #if os(iOS)
+            do { try AVAudioSession.sharedInstance().setActive(true) }
+            catch { self.countdown = nil; self.library.notice = "오디오 출력을 시작할 수 없습니다: \(error.localizedDescription)"; return }
+            #endif
             self.player.play(); self.playing = true
             do { try await Task.sleep(for: .milliseconds(650)) } catch { return }
             self.countdown = nil; self.countdownTask = nil

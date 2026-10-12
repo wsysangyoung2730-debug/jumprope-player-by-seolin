@@ -12,10 +12,10 @@ struct EditorView: View {
             Divider()
             ScrollView {
                 VStack(alignment:.leading,spacing:18) {
-                    TextField("예: 음악줄넘기 1단계",text:Binding(get:{ session.routine.title },set:{ title in session.change({ $0.title = title },remember:false) })).textFieldStyle(.roundedBorder)
+                    TextField("예: 음악줄넘기 1단계",text:Binding(get:{ session.routine.title },set:{ title in session.change({ $0.title = title },remember:false) })).textFieldStyle(.roundedBorder).focusedValue(\.editingRoutineText, true)
                     VStack(alignment:.leading,spacing:8) {
                         Text("동작 순서").font(.subheadline.bold())
-                        TextEditor(text:$text).font(.body).frame(minHeight:125,maxHeight:180).focused($textFocused).padding(7).background(.background,in:RoundedRectangle(cornerRadius:10)).overlay(RoundedRectangle(cornerRadius:10).stroke(.secondary.opacity(0.2)))
+                        TextEditor(text:$text).focusedValue(\.editingRoutineText, true).font(.body).frame(minHeight:125,maxHeight:180).focused($textFocused).padding(7).background(.background,in:RoundedRectangle(cornerRadius:10)).overlay(RoundedRectangle(cornerRadius:10).stroke(.secondary.opacity(0.2)))
                         HStack { Button("텍스트 불러오기…") { flush(); actions.open(.text) }; Spacer(); Text("한 줄에 한 동작").font(.caption).foregroundStyle(.secondary) }
                     }
                     VStack(alignment:.leading,spacing:10) {
@@ -28,7 +28,7 @@ struct EditorView: View {
                 }.padding(20)
             }
             Divider()
-            HStack { Image(systemName:"checkmark.icloud"); Text("변경 내용 자동 저장"); Spacer(); Text("\(session.routine.moves.count)개 동작") }.font(.caption).foregroundStyle(.secondary).padding(16)
+            HStack { Image(systemName:"checkmark.circle"); Text("이 기기에 자동 저장"); Spacer(); Text("\(session.routine.moves.count)개 동작") }.font(.caption).foregroundStyle(.secondary).padding(16)
         }
         .background(.regularMaterial)
         .onAppear { refreshText() }

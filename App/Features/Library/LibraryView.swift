@@ -193,7 +193,7 @@ struct LibraryView: View {
             .padding(12).background(selected ? selectionColor : cardBackground,in:RoundedRectangle(cornerRadius:10))
             .overlay(RoundedRectangle(cornerRadius:10).stroke(selected ? Color.clear : detailColor.opacity(0.16)))
             .contentShape(Rectangle())
-            .onTapGesture(count:2) { session.select(track.id,favorites:favorites); session.restart() }
+            .onTapGesture(count:2) { if session.selectedID == track.id { session.restart() } else { session.select(track.id,favorites:favorites) } }
             .onTapGesture { session.select(track.id,favorites:favorites) }
             .contextMenu { trackMenu(track) }
         } else {
