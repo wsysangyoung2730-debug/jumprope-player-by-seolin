@@ -10,9 +10,12 @@ struct TransportView: View {
                 Text("\(timeText(session.time)) / \(timeText(session.duration))").font(.system(.caption,design:.monospaced)).foregroundStyle(.secondary)
             }
             TimelineView()
-            ViewThatFits {
-                HStack(spacing:24) { playback; Spacer(); repeats }
-                VStack(spacing:14) { playback; repeats }
+            HStack(alignment:.bottom,spacing:16) {
+                ViewThatFits {
+                    HStack(spacing:24) { playback; Spacer(); repeats }
+                    VStack(spacing:14) { playback; repeats }
+                }.frame(maxWidth:.infinity)
+                SeolinBrandBadge()
             }
         }.padding(.horizontal,24).padding(.vertical,18).background(.bar)
     }
