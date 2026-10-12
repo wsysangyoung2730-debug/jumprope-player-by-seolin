@@ -103,7 +103,7 @@ for (platform, prefix, width, height) in [("macOS", "mac", 2880, 1800), ("iPadOS
     let overview = canvas(1800, mac ? 760 : 1580)
     overview.setFillColor(color(0xF0F4FC).cgColor)
     overview.fill(CGRect(x: 0, y: 0, width: 1800, height: mac ? 760 : 1580))
-    for (i, file) in ["01-practice", "02-sync", "03-repeat", "04-scroll", "05-guide", "06-intro"].enumerated() {
+    for (i, file) in ["06-intro", "01-practice", "02-sync", "03-repeat", "04-scroll", "05-guide"].enumerated() {
         let item = load(base.appendingPathComponent("ko-KR/\(platform)/\(file).png"))
         let thumbWidth: CGFloat = 570, thumbHeight = thumbWidth * CGFloat(item.height) / CGFloat(item.width)
         image(item, CGRect(x: CGFloat(i % 3) * 590 + 20, y: CGFloat(i / 3) * (thumbHeight + 20) + 20,
