@@ -14,8 +14,8 @@ struct RootView: View {
         @Bindable var actions = actions
         NavigationSplitView(columnVisibility: $visibility) {
             LibraryView(deleteID: $deleteID)
-                .navigationSplitViewColumnWidth(min: 210, ideal: library.data.settings.sidebarWidth, max: 440)
-                .onGeometryChange(for: Double.self) { $0.size.width } action: { if $0 >= 210 { library.data.settings.sidebarWidth = $0 } }
+                .navigationSplitViewColumnWidth(min: 260, ideal: max(280, library.data.settings.sidebarWidth), max: 440)
+                .onGeometryChange(for: Double.self) { $0.size.width } action: { if $0 >= 260 { library.data.settings.sidebarWidth = $0 } }
         } detail: {
             GeometryReader { geometry in
                 VStack(spacing: 0) {
