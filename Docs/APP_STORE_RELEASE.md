@@ -1,0 +1,49 @@
+# App Store 배포 점검
+
+점검일: 2026-10-13. macOS가 기본 제품이며 iPadOS를 함께 제공한다. 개인정보보호 사이트의 제작·검증은 요청에 따라 제외했다. **로컬 코드·패키지 점검 통과와 App Store 심사 승인은 다르다.** 실제 App Store Connect 업로드나 심사는 진행하지 않았다.
+
+## 수정한 문제
+
+| 범위 | 조치 |
+| --- | --- |
+| 배포 메타데이터 | 버전 1.0.0, 빌드 1, 저작권, 비면제 암호화 미사용 선언을 추가했다. Release dSYM을 생성한다. |
+| 개인정보 API 선언 | `@AppStorage`의 기기 내 튜토리얼 설정에 대해 UserDefaults CA92.1을 선언했다. 추적·서버 수집은 없다. 두 플랫폼 번들에 PrivacyInfo.xcprivacy가 포함된다. |
+| 백업 안정성 | 중복 ID, 깨진 참조, 비정상 숫자·화면 크기, 원격 URL, 폴더 밖 상대경로를 거부한다. 같은 검증을 앱 저장 파일에도 적용한다. 큰 백업·TXT 가져오기를 제한하고 백업 인코딩 실패를 빈 파일로 저장하지 않는다. |
+| 재생 상태 | 로딩 작업 취소, 이전 파일의 지연 오류, 실패 파일의 재생 표시, 로딩 중 재시작, 백업 교체·마지막 곡 제거 시 상태 초기화를 수정했다. |
+| 오디오 | iPad에서 인터럽트와 출력 장치 연결 해제 시 멈춘다. 백그라운드 진입 시 재생을 멈추며 백그라운드 재생을 홍보하지 않는다. |
+| 파일 접근 | 만료 북마크를 갱신하고 일회성 TXT·백업 접근 권한을 해제한다. 이전 폴더 검색 결과가 복원한 라이브러리에 섞이지 않도록 한다. 폴더 기억 해제 후 하위 파일이 목록에서 사라지는 문제를 수정했다. |
+| 입력·화면 | 텍스트 편집 중 앱 재생·삭제 단축키를 막고 목록 제외는 Cmd+Delete로 바꿨다. 좁은 iPad 창에서는 반복 버튼을 아이콘으로 줄인다. 자동 저장 문구를 '이 기기에 자동 저장'으로 바로잡았다. |
+| 불필요한 쓰기 | 내용이 같은 라이브러리는 3초마다 다시 디스크에 쓰지 않는다. |
+
+## 검증 근거
+
+- 핵심 XCTest 16개 통과. 비정상 백업·극단 숫자·기존 백업 호환 회귀 검증 포함.
+- 실제 AVPlayer 통합 확인 통과: WAV 재생, 싱크, 실행 취소, 구간 반복, 저장·복원, 원본 보존, 로딩 취소, 실패 파일, 폴더 기억 해제.
+- macOS Release archive 성공: macOS 14+, arm64 + x86_64 Universal, 버전/빌드/카테고리/PrivacyInfo/dSYM 확인.
+- iPadOS 기기용 Release archive 성공: iPadOS 17+, arm64, 기기 종류 iPad만([2]), 버전/빌드/PrivacyInfo/dSYM 확인.
+- 생성된 Release 실행 파일에 `--qa-demo` 및 캡처용 데이터 생성 코드가 들어가지 않는다.
+- App Sandbox 권한은 사용자가 고른 파일 읽기·쓰기 및 북마크로 제한된다. 별도 네트워크 클라이언트, 카메라, 마이크, 사진 보관함, 위치, 추적 권한을 요청하지 않는다.
+- 앱 코드는 Apple 제공 프레임워크만 사용한다. 광고·분석·외부 SDK, 결제, 로그인, 원격 코드 다운로드가 없다. 외부 링크는 시스템 브라우저로 Instagram을 연다.
+- 컴파일 오류 없음. AppIntents 미사용에 따른 메타데이터 추출 생략 경고만 있다.
+
+아카이브는 `BuildArtifacts/JumpRopePlayer-macOS.xcarchive`, `BuildArtifacts/JumpRopePlayer-iPadOS.xcarchive`에 보관한다. 현재 검증용 아카이브는 서명 없이 생성했으며 그대로 업로드하는 파일이 아니다.
+
+## 제출 전에 남은 실제 확인
+
+1. Xcode에서 배포할 Apple Developer 팀을 선택하고, App Store Connect의 앱 레코드와 `com.seolin.jumpropeplayer`가 일치하는지 확인한다. 이 컴퓨터에 개발/배포 인증서는 있으나 프로비저닝과 계정의 앱 등록·계약 상태는 확인하지 않았다.
+2. 해당 팀으로 다시 Archive → Distribute App → App Store Connect → Validate/Upload를 실행한다. 이 단계의 서버 검증은 로컬 무서명 빌드로 대신할 수 없다. 같은 버전을 재업로드하면 빌드 번호를 올린다.
+3. 지원 URL, 연락처, 가격·판매 지역, 연령 등급 설문, 콘텐츠 권리, App Privacy(현재 구현은 데이터 수집 안 함)를 실제 운영 정보에 맞게 등록한다. 지원 연락처를 임의로 만들지 않았다. 개인정보보호 사이트/URL은 이번 범위 밖이다.
+4. 실제 iPad의 파일 앱·iCloud Drive·외장 저장장치 재연결, Bluetooth/전화 인터럽트, 장시간 수업을 확인한다. Intel Mac은 Universal 컴파일만 확인했고 실기기 실행은 하지 않았다. 관련 후속 검증은 이슈 #9에 남아 있다.
+5. MKV/WEBM/OGG 등은 확장자 가져오기를 허용하지만 코덱에 따라 재생되지 않을 수 있다. 스토어 문구에서 모든 형식 지원을 보장하지 않는다. 기본 권장 형식은 MP3/M4A/WAV, H.264·HEVC MP4/MOV다.
+
+## App Review 메모 초안
+
+이 앱은 사용자가 선택한 로컬 음원·영상과 동작 순서표를 연결해 줄넘기 수업을 연습하는 플레이어입니다. 로그인, 서버, 구독, 앱 내 구매가 없습니다.
+
+검토 방법: 파일 추가로 MP3/M4A/WAV 또는 MP4/MOV 파일을 선택한 다음 순서표 편집에서 줄마다 동작을 입력하세요. 재생 중 '지금 싱크 찍기'를 눌러 각 동작 시간을 기록할 수 있습니다. '구간 반복'을 켜고 순서표에서 시작·끝 동작을 선택하면 준비 카운트 후 해당 구간을 반복합니다. 사이드바의 '사용 가이드'에서 전체 흐름을 볼 수 있습니다. 음원·영상 원본을 수정하거나 삭제하지 않습니다. 백업 JSON은 순서표·설정과 파일 연결 정보만 포함하며 미디어 자체를 포함하지 않습니다.
+
+## 공식 기준
+
+- [스크린샷 규격](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/): Mac 2880×1800, iPad 13인치 2752×2064 가로를 사용한다. PNG/sRGB/알파 없음.
+- [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/): 2.1 완성도, 2.3.3 실제 사용 화면, 2.4.5 Mac Sandbox 등을 기준으로 점검했다.
+- [Required reason API 선언](https://developer.apple.com/documentation/technotes/tn3183-adding-required-reason-api-entries-to-your-privacy-manifest): UserDefaults 사용 사유를 포함한다.

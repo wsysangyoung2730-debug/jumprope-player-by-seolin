@@ -52,7 +52,7 @@ public struct Routine: Codable, Identifiable, Equatable, Sendable {
         }
     }
     public mutating func mark(_ index: Int, at time: Double, gap: Double, duration: Double) {
-        guard moves.indices.contains(index) else { return }
+        guard moves.indices.contains(index), time.isFinite, gap.isFinite, duration.isFinite else { return }
         let start = (max(0, time) * 10).rounded() / 10
         moves[index].time = start
         if gap > 0 {

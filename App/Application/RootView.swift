@@ -48,13 +48,15 @@ struct RootView: View {
                 #endif
         }
         .task { if !hasSeenTutorial { actions.showTutorial = true } }
-        .sheet(isPresented: $session.showSettings) { SettingsView().frame(minWidth: 360, idealWidth: 520, minHeight: 540) }
+        .sheet(isPresented: $session.showSettings) { SettingsView().frame(minWidth: 300, idealWidth: 520, minHeight: 540) }
         #if os(iOS)
         .sheet(isPresented: $session.showEditor, onDismiss: { session.editing = false }) { EditorView().presentationDetents([.large]) }
         #endif
         .fileImporter(isPresented: $actions.showImporter, allowedContentTypes: importTypes, allowsMultipleSelection: allowsMultiple) { result in
             switch result {
-            case .success(let urls): Task { await importURLs(urls, kind: actions.importKind) }
+            case .success(let urls):
+                let kind = actions.importKind
+                Task { await importURLs(urls, kind: kind) }
             case .failure(let error): library.notice = "파일을 열지 못했습니다: \(error.localizedDescription)"
             }
         }
@@ -65,7 +67,7 @@ struct RootView: View {
             Button("가져오기") {
                 guard let pendingBackup else { return }
                 session.pause()
-                do { try library.restore(pendingBackup); session.selectedID = nil; session.routine = Routine(); session.clearLoop(); session.time = 0; session.duration = 0; session.editing = false; session.undo = []; session.player.replaceCurrentItem(with:nil) }
+                do { try library.restore(pendingBackup); session.resetSelection() }
                 catch { library.notice = "가져오지 못했습니다: \(error.localizedDescription)" }
                 self.pendingBackup = nil
             }
@@ -82,6 +84,12 @@ struct RootView: View {
             Button("순서표 삭제", role: .destructive) { if let deleteID { session.deleteRoutine(deleteID) }; deleteID = nil }
         } message: { Text("원본 음원·영상은 유지됩니다.") }
         .onChange(of: library.data.settings) { _, _ in library.save() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { library.save() }
+            #if os(iOS)
+            if phase == .background { session.pause() }
+            #endif
+        }
         #if os(macOS)
         .onExitCommand {
             if actions.showTutorial { actions.showTutorial = false }
@@ -128,14 +136,13 @@ struct RootView: View {
             if let selected = session.selectedID, let added = library.addFiles([first]).first { library.link(selected, added); session.routine = library.routine(for: session.track) }
         case .reconnect(let id): library.reconnect(id, to: first); if id == session.selectedID { session.selectedID = nil; session.select(id, play: false) }
         case .backup:
-            library.access(first)
-            do { pendingBackup = try BackupPayload.decode(Data(contentsOf:first)) }
+            do { pendingBackup = try BackupPayload.decode(library.readImport(first)) }
             catch { library.notice = "백업을 읽지 못했습니다: \(error.localizedDescription)" }
         case .media:
             var media: [URL] = []
             var textFiles: [URL] = []
             for url in urls {
-                library.access(url)
+                if url.pathExtension.lowercased() != "txt" { library.access(url) }
                 if (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true { await library.addFolder(url) }
                 else if url.pathExtension.lowercased() == "txt" { textFiles.append(url) }
                 else { media.append(url) }

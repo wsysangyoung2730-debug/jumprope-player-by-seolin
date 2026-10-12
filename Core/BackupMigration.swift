@@ -25,7 +25,7 @@ public struct LegacyArchive: Codable {
         var sequences: [String:LegacySequence] = [:], orders: [String:[String]] = [:]
         for key in raw.keys {
             if key.hasPrefix("jrp:seq:"), let object = value(key) as? [String:Any] {
-                let times = (object["times"] as? [Any] ?? []).map { v -> Double? in guard let number = v as? Double, number.isFinite, number >= 0 else { return nil }; return number }
+                let times = (object["times"] as? [Any] ?? []).map { v -> Double? in guard let number = v as? Double, number.isFinite, (0...31_536_000).contains(number) else { return nil }; return number }
                 sequences[key] = LegacySequence(title:object["title"] as? String ?? "",text:object["text"] as? String ?? "",times:times,link:object["link"] as? String,savedAt:object["savedAt"] as? Double)
             } else if key.hasPrefix("jrp:order:"), let order = value(key) as? [String] { orders[String(key.dropFirst(10))] = order }
         }
@@ -34,13 +34,14 @@ public struct LegacyArchive: Codable {
             var s = PlayerSettings()
             if let n = values["countSec"] as? Int { s.countSeconds = [0,3,5,10].contains(n) ? n : 3 }
             s.countSound = (values["countSound"] as? Int ?? 0) != 0
-            s.autoGap = max(0,values["autoGap"] as? Double ?? 0)
+            s.autoGap = min(86_400,max(0,values["autoGap"] as? Double ?? 0))
             s.loopCount = min(30,max(0,values["loopCount"] as? Int ?? 3))
             s.repeatMode = RepeatMode(rawValue:values["repeat"] as? String ?? "off") ?? .off
             func mode(_ v:Any?) -> DisplayMode { switch v as? String { case "vid": return .video; case "rise": return .rise; default: return .list } }
             s.stageMode = mode(values["viewMode"]); s.sideMode = mode(values["sideView"])
             s.textSize = min(48,max(12,(values["seqFz"] as? Double ?? 1.1)*16))
-            s.alignment = values["seqAlign"] as? String ?? "left"
+            let alignment = values["seqAlign"] as? String ?? "left"
+            s.alignment = ["left", "center", "right"].contains(alignment) ? alignment : "left"
             if let w = values["sideW"] as? Double, w > 0 { s.sideWidth = min(400,max(200,w)) }
             if let w = values["listW"] as? Double, w > 0 { s.sidebarWidth = min(440,max(210,w)) }
             settings = s
@@ -109,14 +110,10 @@ public enum BackupError: LocalizedError {
 public enum BackupPayload {
     case native(LibrarySnapshot), legacy(LegacyArchive)
     public static func decode(_ data: Data) throws -> BackupPayload {
+        guard data.count <= 100 * 1024 * 1024 else { throw BackupError.invalid }
         if let object = try JSONSerialization.jsonObject(with:data) as? [String:Any], object["tracks"] != nil {
             let snapshot = try JSONDecoder().decode(LibrarySnapshot.self,from:data)
-            guard snapshot.version == 1 else { throw BackupError.version }
-            guard Set(snapshot.tracks.map(\.id)).count == snapshot.tracks.count,
-                  Set(snapshot.routines.map(\.id)).count == snapshot.routines.count,
-                  snapshot.settings.autoGap.isFinite,
-                  (0...30).contains(snapshot.settings.loopCount),
-                  snapshot.routines.allSatisfy({ $0.moves.allSatisfy { $0.time.map { $0.isFinite && $0 >= 0 } ?? true } }) else { throw BackupError.invalid }
+            try snapshot.validate()
             return .native(snapshot)
         }
         return .legacy(try LegacyArchive.parse(data))

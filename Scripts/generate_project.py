@@ -13,7 +13,7 @@ file_types = {
     '.swift': 'sourcecode.swift', '.xcassets': 'folder.assetcatalog',
     '.entitlements': 'text.plist.entitlements', '.md': 'net.daringfireball.markdown',
     '.py': 'text.script.python', '.sh': 'text.script.sh', '.js': 'sourcecode.javascript',
-    '.html': 'text.html', '.yml': 'text.yaml',
+    '.html': 'text.html', '.yml': 'text.yaml', '.xcprivacy': 'text.xml',
 }
 source_paths = sorted([*root.glob('App/**/*.swift'), *root.glob('Core/**/*.swift')])
 asset_path = root / 'App/Resources/Assets.xcassets'
@@ -49,14 +49,15 @@ def group_children(branch, prefix=''):
 builds = [obj('build' + str(path.relative_to(root)), f'isa = PBXBuildFile; fileRef = {refs[str(path.relative_to(root))]};') for path in source_paths]
 asset = refs[str(asset_path.relative_to(root))]
 assetBuild = obj('assetBuild', f'isa = PBXBuildFile; fileRef = {asset};')
-resources = obj('resources', f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({assetBuild}); runOnlyForDeploymentPostprocessing = 0;')
+privacyBuild = obj('privacyBuild', f'isa = PBXBuildFile; fileRef = {refs["App/Resources/PrivacyInfo.xcprivacy"]};')
+resources = obj('resources', f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({assetBuild},{privacyBuild}); runOnlyForDeploymentPostprocessing = 0;')
 prod = obj('product', 'isa = PBXFileReference; explicitFileType = wrapper.application; path = JumpRopePlayer.app; sourceTree = BUILT_PRODUCTS_DIR;')
 pg = obj('products', f'isa = PBXGroup; children = ({prod}); name = Products; sourceTree = "<group>";')
 group = obj('group', f'isa = PBXGroup; children = ({",".join(group_children(tree) + [pg])}); sourceTree = "<group>";')
 source = obj('sources', f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(builds)}); runOnlyForDeploymentPostprocessing = 0;')
 configs = []
 for mode in ['Debug','Release']:
-    settings = {'ALWAYS_SEARCH_USER_PATHS':'NO','PRODUCT_BUNDLE_IDENTIFIER':'com.seolin.jumpropeplayer','PRODUCT_NAME':'JumpRopePlayer','SWIFT_VERSION':'5.0','MACOSX_DEPLOYMENT_TARGET':'14.0','IPHONEOS_DEPLOYMENT_TARGET':'17.0','SDKROOT':'macosx','SUPPORTED_PLATFORMS':'macosx iphoneos iphonesimulator','TARGETED_DEVICE_FAMILY':'2','GENERATE_INFOPLIST_FILE':'YES','INFOPLIST_KEY_CFBundleDisplayName':'JUMPROPE PLAYER','INFOPLIST_KEY_LSApplicationCategoryType':'public.app-category.music','INFOPLIST_KEY_UIApplicationSceneManifest_Generation':'YES','INFOPLIST_KEY_UILaunchScreen_Generation':'YES','INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad':'UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortraitUpsideDown','CODE_SIGN_STYLE':'Automatic','CODE_SIGN_ENTITLEMENTS[sdk=macosx*]':'App/Configuration/JumpRopePlayer.entitlements','ENABLE_HARDENED_RUNTIME':'YES','SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O','DEBUG_INFORMATION_FORMAT':'dwarf','SWIFT_ACTIVE_COMPILATION_CONDITIONS':'DEBUG' if mode=='Debug' else '', 'COMBINE_HIDPI_IMAGES':'YES','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon'}
+    settings = {'ALWAYS_SEARCH_USER_PATHS':'NO','PRODUCT_BUNDLE_IDENTIFIER':'com.seolin.jumpropeplayer','PRODUCT_NAME':'JumpRopePlayer','SWIFT_VERSION':'5.0','MACOSX_DEPLOYMENT_TARGET':'14.0','IPHONEOS_DEPLOYMENT_TARGET':'17.0','SDKROOT':'macosx','SUPPORTED_PLATFORMS':'macosx iphoneos iphonesimulator','TARGETED_DEVICE_FAMILY':'2','GENERATE_INFOPLIST_FILE':'YES','INFOPLIST_KEY_CFBundleDisplayName':'JUMPROPE PLAYER','INFOPLIST_KEY_LSApplicationCategoryType':'public.app-category.music','INFOPLIST_KEY_UIApplicationSceneManifest_Generation':'YES','INFOPLIST_KEY_UILaunchScreen_Generation':'YES','INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad':'UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortraitUpsideDown','CODE_SIGN_STYLE':'Automatic','CODE_SIGN_ENTITLEMENTS[sdk=macosx*]':'App/Configuration/JumpRopePlayer.entitlements','ENABLE_HARDENED_RUNTIME':'YES','SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O','MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'1','INFOPLIST_KEY_ITSAppUsesNonExemptEncryption':'NO','INFOPLIST_KEY_NSHumanReadableCopyright':'Copyright © 2026 SEOLIN','DEBUG_INFORMATION_FORMAT':'dwarf' if mode=='Debug' else 'dwarf-with-dsym','SWIFT_ACTIVE_COMPILATION_CONDITIONS':'DEBUG' if mode=='Debug' else '', 'COMBINE_HIDPI_IMAGES':'YES','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon'}
     configs.append(obj(mode, 'isa = XCBuildConfiguration; name = '+mode+'; buildSettings = {'+''.join(q(k)+' = '+q(v)+';' for k,v in settings.items())+'};'))
 cl=obj('configs', f'isa = XCConfigurationList; buildConfigurations = ({",".join(configs)}); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;')
 target=obj('target', f'isa = PBXNativeTarget; buildConfigurationList = {cl}; buildPhases = ({source},{resources}); buildRules = (); dependencies = (); name = JumpRopePlayer; productName = JumpRopePlayer; productReference = {prod}; productType = "com.apple.product-type.application";')

@@ -51,3 +51,7 @@ Mac 단축키: Space 재생/정지, Enter 싱크 기록, ⌘Z 또는 Esc 싱크 
 - [개발·Git 규칙](Docs/CONTRIBUTING.md)
 
 `main`은 초기 상태를 유지하고 구현 결과는 `develop`에 통합합니다. 소스와 로고는 사용자가 제공한 HTML에서 옮겼습니다. 브라우저에서 저장한 데이터는 별도로 가져와야 합니다.
+
+## App Store 배포
+
+배포 설정·수정 사항·확인 결과와 제출 전 남은 항목은 [배포 점검 기록](Docs/APP_STORE_RELEASE.md)에 정리되어 있습니다.
