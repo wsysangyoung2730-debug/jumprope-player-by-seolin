@@ -1,33 +1,37 @@
 # 앱 로고
 
-JUMPROPE PLAYER by SEOLIN의 줄넘기 연습과 음악 재생을 줄넘기 고리·재생 버튼으로 표현했다. 서린 남색을 바탕으로 노란 손잡이를 사용하고 오른쪽 아래에는 서린 브랜드 배지를 배치했다.
+헤드셋 형태의 줄넘기 고리·노란 손잡이·재생 버튼을 메인 심볼로 사용한다. 심볼은 남색 타일의 중앙을 기준으로 배치하고, 오른쪽 아래의 서린 도장은 얇은 흰 테두리와 부드러운 그림자를 가진 독립적인 스티커처럼 덧씌운다.
 
-- 제작: 기본 내장 이미지 생성 도구. 아래 프롬프트로 생성 후 macOS용 투명 모서리 버전을 편집했다.
-- 원본 앱 로고: `App/Resources/Assets.xcassets/JumpRopeLogo.imageset/jumprope-player-logo.png`.
+- 제작: 기본 내장 이미지 생성 도구로 기존 로고를 편집했다. 원본 서린 도장과 사용자가 제공한 겹침 배치 예시를 참고했다.
+- 앱 내부 로고 원본: `App/Resources/Assets.xcassets/JumpRopeLogo.imageset/jumprope-player-logo.png`.
 - Mac 대표 아이콘: `App/Resources/Assets.xcassets/AppIcon.appiconset/mac-512@2x.png`.
 - iPad 대표 아이콘: `App/Resources/Assets.xcassets/AppIcon.appiconset/ios-marketing-1024@1x.png`.
-- 앱 하단 오른쪽의 서린 로고는 사용자가 제공한 `seolin-logo-box.png`를 그대로 사용한다. `SeolinBrandBox.imageset`에 보관하며 기본형도 `SeolinBrandBasic.imageset`에 보존했다.
-- 아이콘의 작은 브랜드 배지는 이미지를 참고해 생성한 표현이며, 앱 하단 배지는 원본 파일이다.
-- Mac 아이콘은 둥근 외곽 바깥을 투명 처리하고, iPad 아이콘은 불투명 정사각형이다. 각 해상도는 디자인 변경 없이 크기만 맞췄다.
+- Mac과 앱 내부 로고는 투명 배경을 사용한다. 도장이 타일 위로 겹쳐진 외곽을 보존하도록 라이브러리 헤더에서 추가 모서리 마스크를 적용하지 않는다.
+- iPad 아이콘은 불투명 정사각형이며 시스템 모서리 마스크에 도장이 잘리지 않도록 안쪽에 배치한다.
+- 해상도별 아이콘은 이미지 생성 결과의 크기만 맞춰 저장한다.
+- 아이콘 속 작은 서린 도장은 참조 이미지를 바탕으로 생성한 표현이다. 앱 하단 오른쪽은 제공된 원본 `SeolinBrandBox.imageset/seolin-logo-box.png`를 그대로 사용한다.
+- 원본 서린 기본형은 `SeolinBrandBasic.imageset`에 보존한다.
 - 앱 아이콘 설정은 `Scripts/generate_project.py`의 `ASSETCATALOG_COMPILER_APPICON_NAME`에서 관리한다.
 
-## 앱 로고 생성 프롬프트
+## Mac·앱 로고 수정 프롬프트
 
 ```text
-Use case: logo-brand and compositing.
-Create one polished, square 1024x1024 app icon for JUMPROPE PLAYER by SEOLIN, a Mac-first music jump-rope practice player.
-Input images: the two supplied images are supporting brand assets. Image 2 is the SEOLIN TAEKWONDO boxed logo to place as a small maker's signature in the bottom-right of the new app icon. Preserve its winged SL emblem, blue/white colors, and lettering faithfully.
-Main design: a bold, minimal geometric jump rope arch surrounding a large right-facing play triangle. The rope is clearly a sports jump rope, with two short warm yellow handles at its lower ends. Off-white rope and play triangle against a rich SEOLIN navy #1F2C73 full-bleed square background, with just a subtle tonal blue gradient for depth. Balanced confident geometry, thick clean strokes, generous space, elegant and legible at Dock icon sizes. Main symbol slightly above and left of center to leave breathing room for branding.
-Place the supplied boxed Seolin logo as a small crisp white/navy badge in the bottom-right, about 19% of the canvas width, inset at least 7% from the right and bottom edges. Keep it distinct from the rope symbol without overlap.
-Produce the finished icon artwork only: opaque edge-to-edge square background, no outer frame, no mockup, no extra typography or slogans, no photographic scene, no other symbols. The only lettering is already inside the supplied Seolin badge.
+Use case: precise-object-edit / compositing.
+Edit image 1, the existing JUMPROPE PLAYER Mac icon. Image 2 is a composition reference ONLY for how its lower-right Seolin stamp looks pasted on top. Image 3 is the original Seolin boxed logo for faithful brand details.
+Make ONLY these small composition changes:
+1. Move the entire white headset/jump-rope arch, both yellow handles, and white play triangle together so that the main symbol is centered horizontally AND vertically in the blue tile. Its center must be the blue tile's center, not the center of the leftover space next to the badge. Preserve the current symbol's shapes, proportions, scale, colors, highlights, and style. Do not turn it into conventional headphones with ear cushions.
+2. Treat the Seolin stamp as an independent foreground sticker, laid OVER the finished centered icon, like the reference. Place it at the lower-right, with a crisp slim white sticker edge and subtle soft contact shadow to visibly lift it above the navy tile. It may slightly overlap the peripheral lower-right of the main artwork and extend just a little past the tile's lower/right edge, while remaining completely inside the image canvas. Do not move the main symbol away to make room. Do not merge or engrave the stamp into the background.
+Keep the existing rich navy/blue gradient and rounded-square tile. Keep all Seolin lettering and winged SL emblem accurate using image 3. No additional text or new objects.
+Square 1024x1024 final Mac icon, with genuine transparent alpha outside the icon and foreground stamp. No opaque white backdrop, no checkerboard drawing, no screenshot captions. Preserve the overall established look.
 ```
 
-## Mac 아이콘 변환 프롬프트
+## iPad 아이콘 변환 프롬프트
 
 ```text
-Use case: precise-object-edit / background-extraction.
-Input image is the finished JUMPROPE PLAYER icon. Create its macOS Dock icon variant only.
-Keep the existing jump-rope/play symbol, yellow handles, navy gradient, and lower-right Seolin badge unchanged in appearance and relative placement. Do not redesign, redraw, retype, or alter the lettering.
-Make the square artwork a gently rounded square with smooth Apple-style corners (corner radius about 20% of the artwork width). Fit the complete artwork inside a centered tile covering 90% of a square 1024x1024 canvas. Keep all the Seolin badge fully visible.
-Everything outside the rounded tile must be genuinely transparent alpha, including the small outer margin. No white or gray background, no checkerboard drawn into the artwork, no new elements. Output one finished transparent PNG.
+Use case: precise-object-edit / compositing.
+Create the opaque iPad app-icon variant of the attached finished, centered Mac icon.
+Keep the centered white headset/jump-rope arch, yellow handles, white play button, Seolin navy/blue palette, and the independent Seolin stamp sticker style. Preserve the main symbol's exact position and scale; do not push it aside to reserve space for branding.
+Extend the existing navy/blue background seamlessly to ALL four edges of a square image. Remove only the transparent outer margin and rounded outer silhouette by filling them with the same blue background. This must be a completely opaque, full-bleed square.
+Keep the Seolin stamp as a separate raised sticker over the lower-right artwork, with its slim white edge and soft shadow. Shift only this sticker slightly up/left as needed so its entire outer edge stays at least 11% of canvas width from the bottom and right edges, safe for the system's corner mask. A little overlap over the lower-right yellow handle is intentional, like a stamp laid on top.
+Keep the logo lettering and winged SL mark faithful. No new text, no additional symbols, no outer frame, no white canvas, no transparency. Output one square 1024x1024 icon.
 ```
