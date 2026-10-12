@@ -8,7 +8,7 @@ macOS와 iPadOS를 위한 SwiftUI 기반 음악줄넘기 연습 앱.
 
 - **macOS 우선**: macOS 14 이상, iPadOS 17 이상.
 - `JumpRopePlayer.xcodeproj` → `JumpRopePlayer` 스킴 → My Mac 또는 iPad 시뮬레이터.
-- 실제 기기 배포 시 Signing & Capabilities에서 개발 팀을 지정합니다.
+- 자동 서명 팀을 연결했습니다. 다른 계정으로 배포하려면 프로젝트 생성기의 개발 팀과 내보내기 설정을 함께 변경합니다.
 - `swift test`: 플랫폼 독립 순서표·구간·데이터 테스트.
 - Swift 파일 추가 후 `/usr/bin/python3 Scripts/generate_project.py`로 프로젝트를 갱신합니다.
 
@@ -53,6 +53,8 @@ Mac 단축키: Space 재생/정지, Enter 싱크 기록, ⌘Z 또는 Esc 싱크 
 `main`은 초기 상태를 유지하고 구현 결과는 `develop`에 통합합니다. 소스와 로고는 사용자가 제공한 HTML에서 옮겼습니다. 브라우저에서 저장한 데이터는 별도로 가져와야 합니다.
 
 ## App Store 배포
+
+서명된 Mac·iPad 제출 파일과 재제작 방법은 [서명·아카이브 안내](Docs/APP_STORE_SIGNING.md)에 있습니다.
 
 배포 설정·수정 사항·확인 결과와 제출 전 남은 항목은 [배포 점검 기록](Docs/APP_STORE_RELEASE.md)에 정리되어 있습니다.
 

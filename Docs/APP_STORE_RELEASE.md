@@ -26,12 +26,12 @@
 - 앱 코드는 Apple 제공 프레임워크만 사용한다. 광고·분석·외부 SDK, 결제, 로그인, 원격 코드 다운로드가 없다. 외부 링크는 시스템 브라우저로 Instagram을 연다.
 - 컴파일 오류 없음. AppIntents 미사용에 따른 메타데이터 추출 생략 경고만 있다.
 
-아카이브는 `BuildArtifacts/JumpRopePlayer-macOS.xcarchive`, `BuildArtifacts/JumpRopePlayer-iPadOS.xcarchive`에 보관한다. 현재 검증용 아카이브는 서명 없이 생성했으며 그대로 업로드하는 파일이 아니다.
+초기 무서명 검증용 아카이브는 `BuildArtifacts/JumpRopePlayer-macOS.xcarchive`, `BuildArtifacts/JumpRopePlayer-iPadOS.xcarchive`에 보관한다. 후속 이슈 #26에서 계정 서명 아카이브와 Apple Distribution 서명 PKG·IPA를 **`BuildArtifacts/AppStore-1.0.0-build1/`**에 새로 만들었다. 제출에는 새 파일을 사용한다. [서명 설정·산출물·확인 결과](APP_STORE_SIGNING.md)를 참고한다.
 
 ## 제출 전에 남은 실제 확인
 
-1. Xcode에서 배포할 Apple Developer 팀을 선택하고, App Store Connect의 앱 레코드와 `com.seolin.jumpropeplayer`가 일치하는지 확인한다. 이 컴퓨터에 개발/배포 인증서는 있으나 프로비저닝과 계정의 앱 등록·계약 상태는 확인하지 않았다.
-2. 해당 팀으로 다시 Archive → Distribute App → App Store Connect → Validate/Upload를 실행한다. 이 단계의 서버 검증은 로컬 무서명 빌드로 대신할 수 없다. 같은 버전을 재업로드하면 빌드 번호를 올린다.
+1. 개발자 팀·배포 인증서·Mac/iPad App Store 프로비저닝 연결과 최종 파일 서명 검증을 완료했다. App Store Connect에서 `com.seolin.jumpropeplayer`에 맞는 macOS·iOS 앱 레코드를 연결하고 계정의 계약 상태를 확인한다. 앱 레코드 등록·계약 상태는 아직 확인하지 않았다.
+2. 준비된 서명 아카이브에서 Distribute App → App Store Connect → Validate/Upload를 실행하거나, 내보낸 PKG·IPA를 Transporter로 업로드한다. 로컬 서명·프로비저닝 검증과 Apple 서버 검증은 별개다. 같은 버전·플랫폼으로 이미 업로드한 빌드를 다시 제출하면 빌드 번호를 올린다.
 3. 제공한 지원 문서 URL과 운영 연락처, 가격·판매 지역, 연령 등급 설문, 콘텐츠 권리, App Privacy(현재 구현은 데이터 수집 안 함)를 실제 운영 정보에 맞게 등록한다. 지원 연락처를 임의로 만들지 않았다. 개인정보보호 사이트/URL은 이번 범위 밖이다. 실제 정책 URL이 준비되면 App Store Connect와 앱 내 설정의 정책 링크도 연결해야 한다. 현재 앱에 외부 정책 링크를 임의로 넣지 않았다.
 4. 실제 iPad의 파일 앱·iCloud Drive·외장 저장장치 재연결, Bluetooth/전화 인터럽트, 장시간 수업을 확인한다. Intel Mac은 Universal 컴파일만 확인했고 실기기 실행은 하지 않았다. 관련 후속 검증은 이슈 #9에 남아 있다.
 5. MKV/WEBM/OGG 등은 확장자 가져오기를 허용하지만 코덱에 따라 재생되지 않을 수 있다. 스토어 문구에서 모든 형식 지원을 보장하지 않는다. 기본 권장 형식은 MP3/M4A/WAV, H.264·HEVC MP4/MOV다.
