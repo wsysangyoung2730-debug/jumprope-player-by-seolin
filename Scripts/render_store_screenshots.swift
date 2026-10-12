@@ -7,13 +7,13 @@ import UniformTypeIdentifiers
 // Embed unretouched real native UI captures; never redraw controls or invent features.
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let base = root.appendingPathComponent("Marketing/AppStore")
-struct Story { let file: String; let title: String; let detail: String; let tag: String }
+struct Story { let file: String; let title: String; let detail: String }
 let stories = [
-    Story(file: "01-practice", title: "음악과 동작을, 한눈에.", detail: "내 음원과 순서표로 만드는 나만의 줄넘기 연습 공간", tag: "PRACTICE"),
-    Story(file: "02-sync", title: "동작이 바뀌는 순간, 싱크를 톡.", detail: "재생하며 시간을 기록하고, 0.1초 단위로 섬세하게 조정하세요.", tag: "SYNC EDITOR"),
-    Story(file: "03-repeat", title: "어려운 구간만, 한 번 더.", detail: "시작과 끝을 선택하면 원하는 동작을 반복할 수 있어요.", tag: "SECTION REPEAT"),
-    Story(file: "04-scroll", title: "리듬에 맞춰, 다음 동작으로.", detail: "자동 스크롤과 다음 동작 안내로 연습에 집중하세요.", tag: "AUTO SCROLL"),
-    Story(file: "05-guide", title: "첫 연습도, 차근차근 함께.", detail: "파일 추가부터 구간 반복까지, 6단계 사용 가이드", tag: "GETTING STARTED")
+    Story(file: "01-practice", title: "음악과 동작을, 한눈에.", detail: "내 음원과 순서표로 만드는 나만의 줄넘기 연습 공간"),
+    Story(file: "02-sync", title: "동작이 바뀌는 순간, 싱크를 톡.", detail: "재생하며 시간을 기록하고, 0.1초 단위로 섬세하게 조정하세요."),
+    Story(file: "03-repeat", title: "어려운 구간만, 한 번 더.", detail: "시작과 끝을 선택하면 원하는 동작을 반복할 수 있어요."),
+    Story(file: "04-scroll", title: "리듬에 맞춰, 다음 동작으로.", detail: "자동 스크롤과 다음 동작 안내로 연습에 집중하세요."),
+    Story(file: "05-guide", title: "첫 연습도, 차근차근 함께.", detail: "파일 추가부터 구간 반복까지, 6단계 사용 가이드")
 ]
 func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> NSColor {
     NSColor(srgbRed: CGFloat((hex >> 16) & 255)/255, green: CGFloat((hex >> 8) & 255)/255,
@@ -50,7 +50,6 @@ func canvas(_ width:Int,_ height:Int) -> CGContext {
     context.translateBy(x:0,y:CGFloat(height)); context.scaleBy(x:1,y:-1)
     return context
 }
-let logo = load(root.appendingPathComponent("App/Resources/Assets.xcassets/JumpRopeLogo.imageset/jumprope-player-logo.png"))
 for (platform, prefix, width, height) in [("macOS","mac",2880,1800),("iPadOS","ipad",2064,2752)] {
     for (index, story) in stories.enumerated() {
         let mac = platform == "macOS", dark = index == 0 || index == 2 || index == 3
@@ -62,10 +61,8 @@ for (platform, prefix, width, height) in [("macOS","mac",2880,1800),("iPadOS","i
         context.setFillColor(color(0xFFFFFF,dark ? 0.03 : 0.28).cgColor)
         context.fillEllipse(in:CGRect(x:w*0.57,y:h*0.18,width:w*0.9,height:w*0.9))
         let ink=color(dark ? 0xFFFFFF : 0x172950), secondary=color(dark ? 0xC5D9F6 : 0x536882)
-        text("JUMPROPE PLAYER  /  \(story.tag)",CGRect(x:126,y:44,width:w-520,height:44),size:27,weight:.semibold,ink:dark ? color(0xFBD770) : color(0x386BB0))
         text(mac ? story.title : story.title.replacingOccurrences(of: ", ", with: ",\n"),CGRect(x:120,y:mac ? 103 : 132,width:w-330,height:mac ? 128 : 295),size:mac ? 94 : 110,weight:.bold,ink:ink)
         text(story.detail,CGRect(x:126,y:mac ? 235 : 460,width:w-260,height:mac ? 64 : 128),size:39,ink:secondary)
-        image(logo,CGRect(x:w-216,y:62,width:112,height:112),context)
         let shot=load(base.appendingPathComponent("Source/Captures/\(prefix)-\(index+1).png"))
         let top: CGFloat = mac ? 338 : 655
         let maxWidth=w-320, maxHeight=h-top-105
@@ -77,8 +74,6 @@ for (platform, prefix, width, height) in [("macOS","mac",2880,1800),("iPadOS","i
         context.setFillColor(color(mac ? 0xFFFFFF : 0x171B25).cgColor)
         context.addPath(rounded(frame.insetBy(dx:mac ? -2 : -13,dy:mac ? -2 : -13),mac ? 22 : 40)); context.fillPath(); context.restoreGState()
         context.saveGState(); context.addPath(rounded(frame,mac ? 20 : 28));context.clip();image(shot,frame,context);context.restoreGState()
-        text(String(format:"%02d",index+1),CGRect(x:126,y:h-62,width:120,height:38),size:23,weight:.medium,ink:secondary)
-        text("by SEOLIN",CGRect(x:w-274,y:h-62,width:185,height:38),size:24,weight:.semibold,ink:secondary)
         NSGraphicsContext.restoreGraphicsState()
         let output=base.appendingPathComponent("ko-KR/\(platform)/\(story.file).png")
         try write(context,output); print(output.path)
