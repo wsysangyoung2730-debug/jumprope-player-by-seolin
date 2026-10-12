@@ -1,4 +1,4 @@
-// Compile with Core/*.swift, App/LibraryStore.swift and App/PracticeSession.swift.
+// Compile with Core/*.swift, App/Services/LibraryStore.swift and App/Services/PracticeSession.swift.
 import Foundation
 import AVFoundation
 @main struct SmokeTest {

@@ -12,6 +12,14 @@
 - iPad mini (A17 Pro), iPadOS 27 시뮬레이터 실행 및 세로 화면: 사이드바, 두 화면 전환, 순서표, 시간 마커, 재생·반복 조작부 표시 확인.
 - Git 변경 공백 검사.
 
+## 폴더 구조 정리 후 재검증 — 이슈 #10
+
+- 기존 Swift 선언·동작 코드와 에셋·권한 파일의 보존을 원본과 비교 확인했다.
+- Xcode 그룹에서 모든 파일 경로가 실제 파일로 연결되고, 앱 소스 19개가 중복 없이 빌드에 포함되는지 확인했다. 테스트·문서·스크립트는 앱 빌드에서 제외된다.
+- 프로젝트 생성기를 연속 실행해 같은 결과가 생성되는지 확인했다.
+- 핵심 테스트 12개, macOS 및 iPadOS 시뮬레이터 빌드가 통과했다.
+- 새 `Tests/Integration` 경로로 통합 검증을 실행해 재생·싱크·실행 취소·구간 반복·저장 복원·즐겨찾기·원본 보존을 다시 확인했다.
+
 ## 추가 검증이 필요한 범위
 
 - 사용자 실제 음원·영상, 특히 MKV/WEBM/OGG 및 서로 다른 코덱 조합. 가져오기 허용이 재생 보장을 뜻하지 않는다.
@@ -27,7 +35,7 @@
 실제 재생 통합 확인:
 
 ```sh
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swiftc -parse-as-library Core/*.swift App/LibraryStore.swift App/PracticeSession.swift Scripts/SmokeTest.swift -o /tmp/jrp-smoke
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swiftc -parse-as-library Core/*.swift App/Services/LibraryStore.swift App/Services/PracticeSession.swift Tests/Integration/SmokeTest.swift -o /tmp/jrp-smoke
 /tmp/jrp-smoke '/경로/30초-테스트.wav'
 ```
 

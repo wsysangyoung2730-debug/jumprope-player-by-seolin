@@ -14,11 +14,24 @@ macOS와 iPadOS를 위한 SwiftUI 기반 음악줄넘기 연습 앱.
 
 ## 구조
 
-- `App/`: SwiftUI 화면, AVPlayer, 파일 접근·저장.
-- `Core/`: 데이터 모델과 순서표·시간 계산.
-- `Tests/`: 핵심 동작 회귀 테스트.
-- `Legacy/Original.html`: 이전 기능 비교용 원본. 앱 실행에 사용하지 않습니다.
-- `Docs/`: Git 규칙, 기능 대조표, 검증 기록.
+```text
+App/
+├── Application/       # 앱 진입점, 메뉴 동작, 기본 화면 구성
+├── Features/          # Library · Practice · Editor · Playback · Settings
+├── Services/          # 파일 접근·저장, 재생 세션, 백업 문서
+├── Shared/Views/      # 공통 영상 표시
+├── Platform/macOS/    # Mac 전용 휠 입력
+├── Resources/         # 로고·에셋
+├── Configuration/     # 권한·서명 설정
+└── Development/       # Debug 화면 검증 데이터
+Core/                  # 플랫폼 독립 데이터 모델·시간 계산·이전
+Tests/                 # 핵심 테스트·실제 미디어 통합 검증
+Scripts/               # 프로젝트 생성·빌드 검증·브라우저 내보내기
+Docs/                  # 구조·Git 규칙·기능 대조표·검증 기록
+Legacy/                # 비교용 원본 HTML
+```
+
+실제 폴더와 Xcode 탐색기는 같은 계층을 사용합니다. 파일 배치 기준과 추가 절차는 [프로젝트 구조](Docs/PROJECT_STRUCTURE.md)를 참고하세요.
 
 ## 사용 순서
 
