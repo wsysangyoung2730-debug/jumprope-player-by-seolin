@@ -44,7 +44,7 @@ macOS가 기본 제품이며, iPadOS는 같은 기능을 터치와 창 크기에
 | 곡 전환 시 순서표 및 반복 상태 정리 | PracticeSession.select | 순서표 없는 곡에는 등록 안내 |
 | 집중 보기·전체 화면 | RootView, Mac 표준 윈도우 | 패널 숨기기 + Mac 전체 화면 버튼 |
 | 좁은 화면·다크 모드·움직임 줄이기 | SwiftUI, SequenceDisplay | 기기별 화면과 시스템 설정 적용 |
-| Space/Enter/Esc/Delete/방향키 | App Commands, RootView | 텍스트 입력은 시스템 편집 처리 |
+| Space/Enter/Esc/⌘Delete/방향키 | App Commands, RootView | 텍스트 입력은 시스템 편집 처리 |
 | 안내·저장 실패·지원 안 되는 형식 | LibraryStore.notice, RootView | 재생 오류는 명시적으로 안내 |
 | 서린 로고·Instagram 링크 | Assets.xcassets, LibraryView/SettingsView | 원본 로고 보존 |
 | 기존 브라우저 데이터 이전 | export-browser-data.js, LegacyArchive | 미연결 순서표를 보관해 나중에 매칭 |

@@ -40,3 +40,9 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swiftc -parse-as-
 ```
 
 Debug 빌드를 `--qa-demo` 인수로 실행하면 별도의 임시 라이브러리와 무음 WAV를 만들어 화면을 확인한다. 일반 사용자 데이터와 분리되며 Release 빌드에는 이 생성 코드가 포함되지 않는다. 일반 실행에서는 예시 순서표를 넣지 않는다.
+
+## App Store 준비 — 이슈 #20, #22 (2026-10-13)
+
+핵심 테스트 16개와 AVPlayer 통합 확인, macOS Universal 및 iPadOS 기기용 Release 아카이브가 통과했다. 실제 화면 촬영 중 확인한 Mac 편집창/집중 보기 전환 오류와 자동 스크롤 위치, iPad 제목 대비도 수정했다. Mac 5단계 화면 전환과 정상 종료, iPad 13인치 시뮬레이터의 5개 화면, PNG 10장의 규격·sRGB·알파 없음 상태를 확인했다.
+
+자세한 수정 내역과 계정·실기기에서 남은 검증은 [배포 점검 기록](APP_STORE_RELEASE.md)에 기록했다. App Store Connect 업로드나 심사 통과를 의미하지 않는다.
