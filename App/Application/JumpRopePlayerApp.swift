@@ -12,13 +12,13 @@ struct JumpRopePlayerApp: App {
     init() {
         let store: LibraryStore
         #if DEBUG
-        store = CommandLine.arguments.contains("--qa-demo") ? QASeed.library() : LibraryStore()
+        store = StoreCapture.enabled ? StoreCapture.library() : (CommandLine.arguments.contains("--qa-demo") ? QASeed.library() : LibraryStore())
         #else
         store = LibraryStore()
         #endif
         let practice = PracticeSession(library:store)
         #if DEBUG
-        if CommandLine.arguments.contains("--qa-demo"), let first = store.data.tracks.first { practice.select(first.id,play:false) }
+        if StoreCapture.enabled || CommandLine.arguments.contains("--qa-demo"), let first = store.data.tracks.first { practice.select(first.id,play:false) }
         #endif
         _library = State(initialValue:store); _session = State(initialValue:practice)
     }

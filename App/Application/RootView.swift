@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("hasSeenGettingStartedTutorial") private var hasSeenTutorial = false
     @State private var visibility: NavigationSplitViewVisibility = .all
+    @State private var initialSidebarWidth: Double?
     @State private var deleteID: UUID?
     @State private var pendingBackup: BackupPayload?
     var body: some View {
@@ -15,8 +16,18 @@ struct RootView: View {
         @Bindable var actions = actions
         NavigationSplitView(columnVisibility: $visibility) {
             LibraryView(deleteID: $deleteID)
-                .navigationSplitViewColumnWidth(min: 260, ideal: max(280, library.data.settings.sidebarWidth), max: 440)
-                .onGeometryChange(for: Double.self) { $0.size.width } action: { if $0 >= 260 { library.data.settings.sidebarWidth = $0 } }
+                #if os(macOS)
+                .frame(minWidth: 260)
+                #endif
+                .navigationSplitViewColumnWidth(min: 260, ideal: initialSidebarWidth ?? 300, max: 440)
+                .onAppear {
+                    if initialSidebarWidth == nil { initialSidebarWidth = min(440, max(280, library.data.settings.sidebarWidth)) }
+                }
+                .onGeometryChange(for: Double.self) { $0.size.width.rounded() } action: { width in
+                    if (260...440).contains(width), abs(width - library.data.settings.sidebarWidth) >= 1 {
+                        library.data.settings.sidebarWidth = width
+                    }
+                }
         } detail: {
             GeometryReader { geometry in
                 VStack(spacing: 0) {
@@ -26,6 +37,11 @@ struct RootView: View {
                 }.frame(width:geometry.size.width,height:geometry.size.height)
             }
             .navigationTitle(session.track?.name ?? "JUMPROPE PLAYER")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color(uiColor: .systemBackground), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            #endif
             .toolbar {
                 ToolbarItemGroup {
                     Button { session.beginEditing() } label: { Label("순서표 편집", systemImage: "list.bullet.clipboard") }.disabled(session.selectedID == nil)
@@ -38,6 +54,9 @@ struct RootView: View {
         #if os(macOS)
         .toolbarBackground(Color(nsColor:.windowBackgroundColor),for:.windowToolbar)
         .toolbarBackground(.visible,for:.windowToolbar)
+        #else
+        .toolbarBackground(Color(uiColor: .systemBackground), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         #endif
         .tint(.blue)
         .onChange(of: session.focus) { _, value in visibility = value ? .detailOnly : .all }
@@ -47,7 +66,15 @@ struct RootView: View {
                 .presentationDetents([.large])
                 #endif
         }
-        .task { if !hasSeenTutorial { actions.showTutorial = true } }
+        .task {
+            #if DEBUG
+            if StoreCapture.enabled {
+                Task { await StoreCapture.run(session: session, actions: actions) }
+                return
+            }
+            #endif
+            if !hasSeenTutorial { actions.showTutorial = true }
+        }
         .sheet(isPresented: $session.showSettings) { SettingsView().frame(minWidth: 300, idealWidth: 520, minHeight: 540) }
         #if os(iOS)
         .sheet(isPresented: $session.showEditor, onDismiss: { session.editing = false }) { EditorView().presentationDetents([.large]) }

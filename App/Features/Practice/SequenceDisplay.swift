@@ -29,8 +29,11 @@ struct SequenceDisplay: View {
                         }
                     }.padding(.vertical,scrolling ? max(0,(geometry.size.height-rowHeight)/2) : 4)
                 }
-                .onChange(of: session.active) { _, index in
-                    guard let index, session.routine.moves.indices.contains(index), scrolling || !primary else { return }
+                .task(id: "\(scrolling)-\(session.active ?? -1)-\(geometry.size)") {
+                    guard let index = session.active, session.routine.moves.indices.contains(index), scrolling || !primary else { return }
+                    // A mode or window-size change must reveal the current move even while paused.
+                    await Task.yield()
+                    guard !Task.isCancelled, session.routine.moves.indices.contains(index) else { return }
                     withAnimation(reduceMotion ? nil : .easeInOut(duration:0.3)) { proxy.scrollTo(session.routine.moves[index].id,anchor:.center) }
                 }
             }

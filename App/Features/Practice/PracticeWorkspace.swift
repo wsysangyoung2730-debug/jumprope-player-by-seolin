@@ -6,12 +6,18 @@ struct PracticeWorkspace: View {
     @Environment(LibraryStore.self) private var library
     let wide: Bool
     @State private var showCompanion = true
+    @State private var initialSideWidth: Double?
     var body: some View {
         #if os(macOS)
         HSplitView {
             StagePane(primary:true).frame(minWidth:320,maxWidth:.infinity,maxHeight:.infinity)
-            if showCompanion && (!session.showEditor || wide) { StagePane(primary:false).frame(minWidth:200,idealWidth:library.data.settings.sideWidth,maxWidth:400,maxHeight:.infinity)
-                .onGeometryChange(for: Double.self) { $0.size.width } action: { if $0 >= 200 { library.data.settings.sideWidth = $0 } } }
+            if showCompanion && !session.showEditor { StagePane(primary:false).frame(minWidth:200,idealWidth:initialSideWidth ?? 310,maxWidth:400,maxHeight:.infinity)
+                .onAppear { if initialSideWidth == nil { initialSideWidth = min(400, max(200, library.data.settings.sideWidth)) } }
+                .onGeometryChange(for: Double.self) { $0.size.width.rounded() } action: { width in
+                    if (200...400).contains(width), abs(width - library.data.settings.sideWidth) >= 1 {
+                        library.data.settings.sideWidth = width
+                    }
+                } }
         }
         .toolbar { ToolbarItem { Button { showCompanion.toggle() } label: { Label("보조 화면",systemImage:"rectangle.righthalf.inset.filled") } } }
         #else
