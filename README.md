@@ -43,7 +43,7 @@ Legacy/                # 비교용 원본 HTML
 4. 연습 무대와 보조 화면에 순서표·자동 스크롤·영상을 배치합니다.
 5. **구간 반복**을 켜고 시작·끝 동작 또는 재생 막대 구간을 선택합니다.
 
-Mac 단축키: Space 재생/정지, Enter 싱크 기록, ⌘Z 또는 Esc 싱크 취소, ↑/↓ 일시정지 동작 이동, Delete 목록 제외, ⌘O 파일 열기, ⇧⌘O 폴더 열기.
+Mac 단축키: Space 재생/정지, Enter 싱크 기록, ⌘Z 또는 Esc 싱크 취소, ↑/↓ 일시정지 동작 이동, ⌘Delete 목록 제외, ⌘O 파일 열기, ⇧⌘O 폴더 열기.
 
 - [원본 기능 대조표](Docs/FEATURE_PARITY.md)
 - [데이터 이전·백업](Docs/MIGRATION.md)
@@ -55,3 +55,5 @@ Mac 단축키: Space 재생/정지, Enter 싱크 기록, ⌘Z 또는 Esc 싱크 
 ## App Store 배포
 
 배포 설정·수정 사항·확인 결과와 제출 전 남은 항목은 [배포 점검 기록](Docs/APP_STORE_RELEASE.md)에 정리되어 있습니다.
+
+앱스토어 이미지와 등록 문구는 [미리보기 안내](Marketing/AppStore/README.md), 사용자 지원은 [지원 안내](Docs/SUPPORT.md)를 참고하세요.

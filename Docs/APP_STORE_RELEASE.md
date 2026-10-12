@@ -32,7 +32,7 @@
 
 1. Xcode에서 배포할 Apple Developer 팀을 선택하고, App Store Connect의 앱 레코드와 `com.seolin.jumpropeplayer`가 일치하는지 확인한다. 이 컴퓨터에 개발/배포 인증서는 있으나 프로비저닝과 계정의 앱 등록·계약 상태는 확인하지 않았다.
 2. 해당 팀으로 다시 Archive → Distribute App → App Store Connect → Validate/Upload를 실행한다. 이 단계의 서버 검증은 로컬 무서명 빌드로 대신할 수 없다. 같은 버전을 재업로드하면 빌드 번호를 올린다.
-3. 지원 URL, 연락처, 가격·판매 지역, 연령 등급 설문, 콘텐츠 권리, App Privacy(현재 구현은 데이터 수집 안 함)를 실제 운영 정보에 맞게 등록한다. 지원 연락처를 임의로 만들지 않았다. 개인정보보호 사이트/URL은 이번 범위 밖이다.
+3. 제공한 지원 문서 URL과 운영 연락처, 가격·판매 지역, 연령 등급 설문, 콘텐츠 권리, App Privacy(현재 구현은 데이터 수집 안 함)를 실제 운영 정보에 맞게 등록한다. 지원 연락처를 임의로 만들지 않았다. 개인정보보호 사이트/URL은 이번 범위 밖이다. 실제 정책 URL이 준비되면 App Store Connect와 앱 내 설정의 정책 링크도 연결해야 한다. 현재 앱에 외부 정책 링크를 임의로 넣지 않았다.
 4. 실제 iPad의 파일 앱·iCloud Drive·외장 저장장치 재연결, Bluetooth/전화 인터럽트, 장시간 수업을 확인한다. Intel Mac은 Universal 컴파일만 확인했고 실기기 실행은 하지 않았다. 관련 후속 검증은 이슈 #9에 남아 있다.
 5. MKV/WEBM/OGG 등은 확장자 가져오기를 허용하지만 코덱에 따라 재생되지 않을 수 있다. 스토어 문구에서 모든 형식 지원을 보장하지 않는다. 기본 권장 형식은 MP3/M4A/WAV, H.264·HEVC MP4/MOV다.
 
@@ -44,6 +44,15 @@
 
 ## 공식 기준
 
-- [스크린샷 규격](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/): Mac 2880×1800, iPad 13인치 2752×2064 가로를 사용한다. PNG/sRGB/알파 없음.
+- [스크린샷 규격](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/): Mac 2880×1800, iPad 13인치 2064×2752 세로를 사용한다. PNG/sRGB/알파 없음.
 - [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/): 2.1 완성도, 2.3.3 실제 사용 화면, 2.4.5 Mac Sandbox 등을 기준으로 점검했다.
 - [Required reason API 선언](https://developer.apple.com/documentation/technotes/tn3183-adding-required-reason-api-entries-to-your-privacy-manifest): UserDefaults 사용 사유를 포함한다.
+
+## 실제 화면 촬영 중 추가 수정
+
+- Mac의 패널 너비를 측정한 값을 현재 이상적 너비로 다시 적용하던 순환을 끊었다. 이 순환은 집중 보기·편집창 전환 때 AppKit 제약 갱신 예외를 만들 수 있었다. 너비는 다음 실행을 위해 저장하고 현재 레이아웃의 기본 너비와 분리한다.
+- 편집창을 열 때 보조 패널을 잠시 숨기고 사이드바 최소 너비를 고정해 글자가 세로로 찌그러지는 현상을 방지했다.
+- 자동 스크롤 모드로 바꾸거나 창 크기를 변경하면, 일시정지 중에도 현재 동작으로 이동한다.
+- iPad 집중 보기의 탐색 막대 배경을 명시해 제목 대비를 유지한다.
+
+화면 수정 후 실제 Mac 앱에서 연습 → 편집 → 반복 → 집중 보기 → 가이드 전환과 정상 종료를 확인했다. iPad 13인치 시뮬레이터에서도 같은 5개 화면을 촬영했다. 캡처와 마케팅 소스는 별도 이슈 #22에 보관한다.
