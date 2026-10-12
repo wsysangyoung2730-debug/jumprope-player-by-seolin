@@ -141,6 +141,15 @@ struct LibraryView: View {
             .scrollContentBackground(.hidden)
             .background(sidebarBackground)
             Divider()
+            Button { actions.showTutorial = true } label: {
+                HStack(spacing:10) {
+                    Image(systemName:"questionmark.circle")
+                    Text("사용 가이드").font(.system(size:13,weight:.medium))
+                    Spacer()
+                    Image(systemName:"chevron.right").font(.caption)
+                }.foregroundStyle(textColor).padding(.horizontal,16).padding(.top,14).padding(.bottom,2)
+                    .contentShape(Rectangle())
+            }.buttonStyle(.plain).help("파일 추가부터 구간 반복까지 알아보기")
             HStack {
                 Text("\(library.data.tracks.filter { !$0.hidden && !$0.missing }.count)개 파일").foregroundStyle(detailColor)
                 Spacer()
