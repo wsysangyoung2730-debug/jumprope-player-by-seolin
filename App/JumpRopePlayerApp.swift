@@ -13,7 +13,19 @@ struct JumpRopePlayerApp: App {
     @State private var library: LibraryStore
     @State private var session: PracticeSession
     @State private var actions = AppActions()
-    init() { let store = LibraryStore(); _library = State(initialValue: store); _session = State(initialValue: PracticeSession(library: store)) }
+    init() {
+        let store: LibraryStore
+        #if DEBUG
+        store = CommandLine.arguments.contains("--qa-demo") ? QASeed.library() : LibraryStore()
+        #else
+        store = LibraryStore()
+        #endif
+        let practice = PracticeSession(library:store)
+        #if DEBUG
+        if CommandLine.arguments.contains("--qa-demo"), let first = store.data.tracks.first { practice.select(first.id,play:false) }
+        #endif
+        _library = State(initialValue:store); _session = State(initialValue:practice)
+    }
     var body: some Scene {
         #if os(macOS)
         Window("JUMPROPE PLAYER by SEOLIN", id: "player") {

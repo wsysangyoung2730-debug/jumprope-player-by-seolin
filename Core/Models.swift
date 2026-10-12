@@ -15,7 +15,7 @@ public struct Routine: Codable, Identifiable, Equatable, Sendable {
     public var isEmpty: Bool { title.isEmpty && moves.isEmpty }
     public func active(at time: Double) -> Int? {
         moves.indices.filter { moves[$0].time.map { $0 <= time + 0.02 } ?? false }
-            .max { (moves[$0].time ?? 0) <= (moves[$1].time ?? 0) }
+            .max { a,b in let x = moves[a].time ?? 0, y = moves[b].time ?? 0; return x == y ? a < b : x < y }
     }
     public func next(at time: Double) -> Int? {
         moves.indices.filter { moves[$0].time.map { $0 > time + 0.02 } ?? false }
@@ -130,6 +130,7 @@ public struct LibrarySnapshot: Codable {
     public var favorites: [UUID] = []
     public var orders: [String: [String]] = [:]
     public var settings = PlayerSettings()
+    public var pendingLegacy: LegacyArchive?
     public init() {}
 }
 public enum TextImport {

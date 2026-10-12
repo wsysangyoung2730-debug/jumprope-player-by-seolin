@@ -1,0 +1,13 @@
+name: Swift 검증
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: 공통 테스트 및 Mac·iPad 빌드
+        run: Scripts/verify.sh

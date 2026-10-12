@@ -12,6 +12,7 @@ final class PracticeSession {
     var duration: Double = 0
     var playing = false
     var loading = false
+    var hasVideo = false
     var routine = Routine()
     var editing = false
     var markIndex = 0
@@ -46,7 +47,7 @@ final class PracticeSession {
         observer = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.03, preferredTimescale: 600), queue: .main) { [weak self] value in
             Task { @MainActor in self?.tick(value.seconds) }
         }
-        endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: nil, queue: .main) { [weak self] notification in
+        endObserver = NotificationCenter.default.addObserver(forName: AVPlayerItem.didPlayToEndTimeNotification, object: nil, queue: .main) { [weak self] notification in
             guard let item = notification.object as? AVPlayerItem else { return }
             Task { @MainActor in guard let self, item === self.player.currentItem else { return }; self.ended() }
         }
@@ -57,7 +58,7 @@ final class PracticeSession {
         if id == selectedID { if play { resume() }; return }
         pause(); loadTask?.cancel(); clearLoop(); editing = false; undo = []; time = 0; duration = 0
         selectedID = id; routine = library.routine(for: item); markIndex = routine.moves.firstIndex(where: { $0.time == nil }) ?? 0
-        loading = true
+        loading = true; hasVideo = false
         let asset = AVURLAsset(url: item.url)
         let avItem = AVPlayerItem(asset: asset)
         player.replaceCurrentItem(with: avItem)
@@ -70,9 +71,10 @@ final class PracticeSession {
             do {
                 let length = try await asset.load(.duration).seconds
                 let playable = try await asset.load(.isPlayable)
+                let videoTracks = try await asset.loadTracks(withMediaType:.video)
                 guard let self, !Task.isCancelled, self.selectedID == id else { return }
                 guard playable, length.isFinite, length > 0 else { throw CocoaError(.fileReadUnknown) }
-                self.duration = length; self.loading = false
+                self.duration = length; self.hasVideo = !videoTracks.isEmpty; self.loading = false
                 if play { self.resume() }
             } catch {
                 guard !Task.isCancelled else { return }

@@ -45,7 +45,7 @@ struct LibraryView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName:"figure.jumprope").font(.title).foregroundStyle(.blue)
+                Image("SeolinLogo").resizable().scaledToFit().frame(width:40,height:34).accessibilityLabel("서린태권도 로고")
                 VStack(alignment:.leading,spacing:2) { Text("JUMPROPE").font(.headline); Text("PLAYER by SEOLIN").font(.caption2).foregroundStyle(.secondary) }
                 Spacer()
             }.padding(18)
