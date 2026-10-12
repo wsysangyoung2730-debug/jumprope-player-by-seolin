@@ -10,7 +10,7 @@ struct PracticeWorkspace: View {
         #if os(macOS)
         HSplitView {
             StagePane(primary:true).frame(minWidth:320,maxWidth:.infinity,maxHeight:.infinity)
-            if showCompanion { StagePane(primary:false).frame(minWidth:200,idealWidth:library.data.settings.sideWidth,maxWidth:400,maxHeight:.infinity)
+            if showCompanion && (!session.showEditor || wide) { StagePane(primary:false).frame(minWidth:200,idealWidth:library.data.settings.sideWidth,maxWidth:400,maxHeight:.infinity)
                 .onGeometryChange(for: Double.self) { $0.size.width } action: { if $0 >= 200 { library.data.settings.sideWidth = $0 } } }
         }
         .toolbar { ToolbarItem { Button { showCompanion.toggle() } label: { Label("보조 화면",systemImage:"rectangle.righthalf.inset.filled") } } }
@@ -62,9 +62,9 @@ struct StagePane: View {
             if primary && library.data.settings.countSeconds > 0 { nextCue.padding(.bottom,16) }
             ZStack {
                 if mode == .video {
-                    if session.track?.isVideo == true && showsVideo {
+                    if session.hasVideo && showsVideo {
                         VStack(spacing:8) {
-                            VideoPlayer(player:session.player).onTapGesture { session.toggle() }
+                            MediaSurface(player:session.player).onTapGesture { session.toggle() }
                                 .frame(maxWidth:.infinity,maxHeight:primary ? .infinity : library.data.settings.videoHeight)
                             if !primary {
                                 Slider(value:Binding(get:{ library.data.settings.videoHeight },set:{ library.data.settings.videoHeight = $0 }),in:120...700).help("영상 높이")

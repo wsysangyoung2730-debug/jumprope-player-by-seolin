@@ -9,6 +9,7 @@ final class LibraryStore {
     private let storage: URL
     private var scopes: [URL] = []
     private var rescanning = false
+    private var saveDisabled = false
     init(storage: URL? = nil) {
         self.storage = storage ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Seolin/JumpRopePlayer/library.json")
         do {
@@ -17,10 +18,15 @@ final class LibraryStore {
                 guard decoded.version == 1 else { throw CocoaError(.fileReadCorruptFile) }
                 data = decoded
             }
-        } catch { notice = "저장된 라이브러리를 읽지 못했습니다. 원본을 보존했습니다: \(error.localizedDescription)" }
+        } catch {
+            let recovery = self.storage.deletingLastPathComponent().appendingPathComponent("unreadable-\(UUID().uuidString).json")
+            do { try FileManager.default.copyItem(at:self.storage,to:recovery); notice = "저장 데이터를 읽지 못해 복구용 사본을 보관했습니다." }
+            catch { saveDisabled = true; notice = "저장 데이터를 읽지 못했습니다: \(error.localizedDescription)" }
+        }
         restoreAccess()
     }
     func save() {
+        guard !saveDisabled else { return }
         do {
             try FileManager.default.createDirectory(at: storage.deletingLastPathComponent(), withIntermediateDirectories: true)
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -80,7 +86,7 @@ final class LibraryStore {
             if let previous = data.tracks.first(where: { $0.legacyKey == track.legacyKey }) { track.routineID = previous.routineID }
             data.tracks.append(track); ids.append(track.id)
         }
-        save(); return ids
+        applyLegacy(); save(); return ids
     }
     func addFolder(_ url: URL, replacing: UUID? = nil) async {
         access(url)
@@ -94,7 +100,7 @@ final class LibraryStore {
         }
         restoreAccess(); await rescan(); save()
     }
-    func rescan() async {
+    func rescan(preserving: UUID? = nil) async {
         guard !rescanning else { return }; rescanning = true; defer { rescanning = false }
         for source in data.sources {
             guard !unavailableSources.contains(source.id) else { continue }
@@ -107,9 +113,29 @@ final class LibraryStore {
             guard let urls = result else { unavailableSources.insert(source.id); continue }
             _ = addFiles(urls, source: source, explicit: false)
             let paths = Set(urls.map(\.path))
-            for i in data.tracks.indices where data.tracks[i].sourceID == source.id { data.tracks[i].missing = !paths.contains(data.tracks[i].url.path) }
+            for i in data.tracks.indices where data.tracks[i].sourceID == source.id && data.tracks[i].id != preserving { data.tracks[i].missing = !paths.contains(data.tracks[i].url.path) }
         }
         save()
+    }
+    func applyLegacy() {
+        guard var archive = data.pendingLegacy else { return }
+        data.pendingLegacy = nil
+        archive.apply(to:&data)
+        data.pendingLegacy = archive
+    }
+    func restore(_ payload: BackupPayload) throws {
+        if FileManager.default.fileExists(atPath:storage.path) {
+            let copy = storage.deletingLastPathComponent().appendingPathComponent("before-import-\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(4)).json")
+            try FileManager.default.copyItem(at:storage,to:copy)
+        }
+        saveDisabled = false
+        switch payload {
+        case .native(let snapshot): data = snapshot; restoreAccess()
+        case .legacy(let archive): data.pendingLegacy = archive; applyLegacy()
+        }
+        save()
+        let pending = data.pendingLegacy?.sequences.count ?? 0
+        notice = pending > 0 ? "가져왔습니다. 원본 파일을 추가하면 남은 순서표 \(pending)개가 자동 연결됩니다." : "백업을 가져왔습니다. 필요한 파일·폴더는 다시 연결해 주세요."
     }
     func routine(for track: MediaTrack?) -> Routine {
         guard let id = track?.routineID else { return Routine() }

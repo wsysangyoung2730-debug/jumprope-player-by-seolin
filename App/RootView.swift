@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var visibility: NavigationSplitViewVisibility = .all
     @State private var deleteID: UUID?
+    @State private var pendingBackup: BackupPayload?
     var body: some View {
         @Bindable var session = session
         @Bindable var actions = actions
@@ -20,8 +21,8 @@ struct RootView: View {
                 VStack(spacing: 0) {
                     workspace(wide: geometry.size.width > 900)
                     Divider()
-                    TransportView()
-                }
+                    TransportView().frame(maxWidth:.infinity)
+                }.frame(width:geometry.size.width,height:geometry.size.height)
             }
             .navigationTitle(session.track?.name ?? "JUMPROPE PLAYER")
             .toolbar {
@@ -33,6 +34,10 @@ struct RootView: View {
                 }
             }
         }
+        #if os(macOS)
+        .toolbarBackground(Color(nsColor:.windowBackgroundColor),for:.windowToolbar)
+        .toolbarBackground(.visible,for:.windowToolbar)
+        #endif
         .tint(.blue)
         .onChange(of: session.focus) { _, value in visibility = value ? .detailOnly : .all }
         .sheet(isPresented: $session.showSettings) { SettingsView().frame(minWidth: 360, idealWidth: 520, minHeight: 540) }
@@ -45,6 +50,18 @@ struct RootView: View {
             case .failure(let error): library.notice = "파일을 열지 못했습니다: \(error.localizedDescription)"
             }
         }
+        .fileExporter(isPresented:$actions.showExporter,document:BackupDocument(snapshot:library.data),contentType:.json,defaultFilename:"SEOLIN-JUMPROPE-backup") { result in
+            if case .failure(let error) = result { library.notice = "백업 저장 실패: \(error.localizedDescription)" }
+        }
+        .confirmationDialog("백업 데이터를 가져올까요?",isPresented:Binding(get:{ pendingBackup != nil },set:{ if !$0 { pendingBackup = nil } })) {
+            Button("가져오기") {
+                guard let pendingBackup else { return }
+                session.pause()
+                do { try library.restore(pendingBackup); session.selectedID = nil; session.routine = Routine(); session.clearLoop(); session.time = 0; session.duration = 0; session.editing = false; session.undo = []; session.player.replaceCurrentItem(with:nil) }
+                catch { library.notice = "가져오지 못했습니다: \(error.localizedDescription)" }
+                self.pendingBackup = nil
+            }
+        } message: { Text("앱 백업은 라이브러리를 교체하고, 브라우저 백업은 순서표를 연결합니다. 현재 데이터는 복구용 사본으로 보관합니다. 음원·영상 파일은 백업에 포함되지 않습니다.") }
         .dropDestination(for: URL.self) { urls, _ in Task { await importURLs(urls, kind: .media) }; return true }
         .overlay(alignment: .top) {
             if let notice = library.notice {
@@ -64,17 +81,18 @@ struct RootView: View {
         }
         #endif
         .task {
-            await library.rescan()
+            await library.rescan(preserving:session.selectedID)
+            if session.selectedID == nil, let first = library.data.tracks.filter({ !$0.hidden && !$0.missing }).sorted(by:{ $0.relativePath.localizedStandardCompare($1.relativePath) == .orderedAscending }).first { session.select(first.id,play:false) }
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
-                if scenePhase == .active { await library.rescan() }
+                if scenePhase == .active { await library.rescan(preserving:session.selectedID) }
             }
         }
     }
     @ViewBuilder private func workspace(wide: Bool) -> some View {
         #if os(macOS)
         HSplitView {
-            PracticeWorkspace(wide: wide).frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
+            PracticeWorkspace(wide: wide).frame(minWidth: 320, maxWidth: .infinity, maxHeight: .infinity)
             if session.showEditor { EditorView().frame(minWidth: 310, idealWidth: 370, maxWidth: 520) }
         }
         #else
@@ -100,19 +118,25 @@ struct RootView: View {
         case .link:
             if let selected = session.selectedID, let added = library.addFiles([first]).first { library.link(selected, added); session.routine = library.routine(for: session.track) }
         case .reconnect(let id): library.reconnect(id, to: first); if id == session.selectedID { session.selectedID = nil; session.select(id, play: false) }
-        case .backup: library.notice = "백업 가져오기를 준비하고 있습니다."
+        case .backup:
+            library.access(first)
+            do { pendingBackup = try BackupPayload.decode(Data(contentsOf:first)) }
+            catch { library.notice = "백업을 읽지 못했습니다: \(error.localizedDescription)" }
         case .media:
             var media: [URL] = []
+            var textFiles: [URL] = []
             for url in urls {
                 library.access(url)
                 if (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true { await library.addFolder(url) }
-                else if url.pathExtension.lowercased() == "txt" { session.importText(url) }
+                else if url.pathExtension.lowercased() == "txt" { textFiles.append(url) }
                 else { media.append(url) }
             }
             let ids = library.addFiles(media)
             if let video = ids.first(where: { id in library.data.tracks.first(where: { $0.id == id })?.isVideo == true }) {
                 library.data.settings.sideMode = .video; session.videoInStage = false; session.select(video)
             }
+            if session.selectedID == nil, let id = ids.first { session.select(id,play:false) }
+            if let text = textFiles.first { session.importText(text) }
             if ids.isEmpty && !media.isEmpty { library.notice = "MP3, M4A, WAV, MP4, MOV 등의 음원·영상 파일을 선택해 주세요. WMA·WMV는 먼저 변환해야 합니다." }
         }
         if session.selectedID == nil, let first = library.data.tracks.first(where: { !$0.hidden && !$0.missing }) { session.select(first.id, play: false) }
