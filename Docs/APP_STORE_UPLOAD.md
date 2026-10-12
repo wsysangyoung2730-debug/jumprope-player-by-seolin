@@ -2,7 +2,7 @@
 
 작업일: 2026-10-13. 이슈 #28, 작업 브랜치 `setting/#28-appStoreConnect`.
 macOS를 기본 제품으로 두고 iPadOS를 함께 제공하는 하나의 다중 플랫폼 앱으로 등록했다.
-실제 심사 요청과 출시는 진행하지 않았다.
+초기 등록에서는 제출 전까지 준비했다. 이후 사용자 추가 승인에 따라 두 플랫폼을 실제 심사 제출했으며, 현재 심사 대기 중이다(문서 마지막 절 참조). 출시는 아직 진행하지 않았다.
 
 ## 앱 레코드
 
@@ -80,3 +80,19 @@ Mac과 iPad 모두 빌드 1.0.0 (2)를 연결하고 `심사에 추가` 필수값
 - 빌드 1.0.0 (2), 설명·지원·정책·출시 설정은 유지했다. 앱 코드 변경이 없어 새 아카이브나 바이너리 업로드는 만들지 않았다.
 - 바탕화면 `JUMPROPE_AppStore_미리보기_20261013` 폴더와 ZIP도 새 이미지·모아보기·안내로 갱신했다.
 - 제작 소스는 `Scripts/render_store_intro.swift`, 규격 확인은 `Scripts/verify_store_screenshots.py`다. 로컬 앱 테스트와 빌드는 반복하지 않았다.
+
+## 최종 심사 제출
+
+사용자가 소개 이미지의 첫 순서 배치를 확인한 뒤 “그다음에 바로 심사 올려주면 돼”라고 추가 승인했다. 이에 따라 앞 절의 제출 전 보류를 해제하고, 2026-10-13 KST에 두 플랫폼을 실제 심사 제출했다.
+
+| 플랫폼 | 버전 / 빌드 | 제출 시각 | 확인된 최종 상태 |
+| --- | --- | --- | --- |
+| macOS | 1.0.0 / 2 | 오전 6:29 | 심사 대기 중 |
+| iPadOS (iOS) | 1.0.0 / 2 | 오전 6:30 | 심사 대기 중 |
+
+- Mac과 iPad 모두 `06-intro`가 첫 번째이며, 기존 `01-practice`~`05-guide`가 이어진다.
+- 두 플랫폼의 `심사를 위해 제출`을 각각 실행하고 완료 메시지, `심사 대기 중`, 제출 초안 0개를 확인했다.
+- [Mac 제출](https://appstoreconnect.apple.com/apps/6822076754/distribution/reviewsubmissions/details/e98065f9-2d24-42fc-bc3e-9022fb119f6e)
+- [iPad 제출](https://appstoreconnect.apple.com/apps/6822076754/distribution/reviewsubmissions/details/60788377-d6b8-4c26-a102-1a6043252e74)
+- 출시 방식은 수동 출시로 유지한다. 아직 심사 승인이나 App Store 출시는 완료되지 않았다.
+- 내부 브라우저만 사용했다. 제출 완료 증빙은 Git 제외 `BuildArtifacts/AppStore-Connect-1.0.0-build2/Logs/mac-ipad-submitted.jpg`에 보관한다.
