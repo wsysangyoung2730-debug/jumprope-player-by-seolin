@@ -4,9 +4,9 @@
 
 ## 업로드할 이미지
 
-- `ko-KR/macOS`: 2880×1800 PNG 5장
-- `ko-KR/iPadOS`: 2064×2752 PNG 5장 (13인치 iPad 세로)
-- 모든 파일: sRGB, 불투명 RGB. App Store Connect에서 파일명 순서대로 등록한다.
+- `ko-KR/macOS`: 2880×1800 PNG 6장
+- `ko-KR/iPadOS`: 2064×2752 PNG 6장 (13인치 iPad 세로)
+- 모든 파일: sRGB, 불투명 RGB. App Store Connect에서 파일명 순서대로 등록한다. 06-intro는 기존 다섯 장 뒤에 추가한 앱 소개 이미지다.
 - `Overview`는 검토용 모아보기로, App Store에 업로드하지 않는다.
 - Apple 용어상 이번 결과는 **스크린샷 이미지**다. 'App Preview' 동영상은 포함하지 않는다.
 
@@ -17,19 +17,34 @@
 | 03 | 구간 반복 | 어려운 구간만, 한 번 더. |
 | 04 | 자동 스크롤·집중 보기 | 리듬에 맞춰, 다음 동작으로. |
 | 05 | 사용 가이드 | 첫 연습도, 차근차근 함께. |
+| 06 | 앱 소개 · 실제 연습 화면 | 음악과 동작을 한눈에, 줄넘기 연습에 더 집중하세요. |
 
 ## 원본과 재제작
 
-`Source/Captures`는 실제 SwiftUI 앱 실행 화면이다. 가상의 동작 이름과 자체 생성 무음 WAV를 사용했으며 사용자 음악·영상·개인 파일을 노출하지 않는다. 기능 화면을 AI로 재생성하거나 조작 버튼을 이미지로 꾸며 넣지 않았다. 미리보기 바깥의 상단 영문 보조 문구·앱 로고와 하단 번호·서명은 제거하고 큰 한글 제목, 설명과 실제 앱 화면만 남겼다. 앱 화면 안의 로고와 UI는 원본 그대로 유지한다.
+`Source/Captures`는 실제 SwiftUI 앱 실행 화면이다. 가상의 동작 이름과 자체 생성 무음 WAV를 사용했으며 사용자 음악·영상·개인 파일을 노출하지 않는다. 기능 화면을 AI로 재생성하거나 조작 버튼을 이미지로 꾸며 넣지 않았다. 미리보기 바깥의 상단 영문 보조 문구·앱 로고와 하단 번호·서명은 제거하고 큰 한글 제목, 설명과 실제 앱 화면만 남겼다. 앱 화면 안의 로고와 UI는 원본 그대로 유지한다. 추가한 06-intro는 사용자가 확정한 소개 이미지로, 예시처럼 문구·앱 아이콘·실제 화면·오른쪽 아래 서린 로고를 배치한다. 기존 01~05 디자인은 유지한다.
 
-디자인은 편집 가능한 `Scripts/render_store_screenshots.swift`에서 관리한다. 배경·문구·프레임만 코드로 렌더링하고 원본 화면은 비율을 유지해 삽입한다.
+기능 이미지 디자인은 `Scripts/render_store_screenshots.swift`, 소개 이미지는 `Scripts/render_store_intro.swift`에서 관리한다. 배경·문구·프레임만 코드로 렌더링하고 원본 화면은 비율을 유지해 삽입한다.
 
 ```sh
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift Scripts/render_store_screenshots.swift
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift Scripts/render_store_intro.swift
 python3 Scripts/verify_store_screenshots.py
 ```
 
 캡처용 `App/Development/StoreCapture.swift`는 Debug에만 포함된다. 앱을 `--store-capture --store-page 0`으로 실행하면 별도 임시 라이브러리로 5장을 생성한다. `--store-page 1`~`5`는 개별 촬영이다. 결과는 캡처 앱의 Documents/StoreCaptures에 저장된다. 실제 화면이 나타난 후 촬영되므로 Mac 앱은 활성화되어 있어야 한다. 촬영용 Bundle ID는 `com.seolin.jumpropeplayer.storecapture`이며 본 앱 저장소와 분리된다. iPad는 iPad Pro 13인치 시뮬레이터의 세로 화면이다. 원본 화면이 바뀌면 다시 촬영한 뒤 렌더링한다.
+
+### 추가 소개 이미지 문구
+
+음악과 동작을 한눈에,
+줄넘기 연습에
+더 집중하세요.
+
+음악·영상과 순서표를 함께 보고,
+필요한 구간을 반복해서 연습하세요.
+
+JUMPROPE PLAYER / by SEOLIN
+
+Mac은 좌측 문구와 아이콘·우측 실제 화면, iPad는 제목을 두 줄로 표시하고, 상단 문구와 아이콘·가로 중앙에 정렬한 하단 실제 화면으로 배치한다. 기존 서린 로고는 흰색 템플릿으로 표시하며 원본 형태는 유지한다.
 
 ## 등록한 한국어 문구
 
@@ -53,6 +68,6 @@ python3 Scripts/verify_store_screenshots.py
 
 ## 배포 확인
 
-두 플랫폼의 한국어 스크린샷 각 5장과 위 설명을 App Store Connect 앱 `6822076754`에 등록했다. 저작권은 `2026 SEOLIN. All rights reserved.`이며 개인정보처리방침은 https://seolin-apps-site.vercel.app/jumprope-player/privacy/ 이다. 업로드·버전 연결·남은 항목은 [등록 기록](../../Docs/APP_STORE_UPLOAD.md), 코드 점검과 실기기 확인 항목은 [배포 점검](../../Docs/APP_STORE_RELEASE.md)을 참고한다.
+두 플랫폼의 한국어 스크린샷 각 6장과 위 설명을 App Store Connect 앱 `6822076754`에 등록했다. 저작권은 `2026 SEOLIN. All rights reserved.`이며 개인정보처리방침은 https://seolin-apps-site.vercel.app/jumprope-player/privacy/ 이다. 업로드·버전 연결·남은 항목은 [등록 기록](../../Docs/APP_STORE_UPLOAD.md), 코드 점검과 실기기 확인 항목은 [배포 점검](../../Docs/APP_STORE_RELEASE.md)을 참고한다.
 
 [Apple 공식 이미지 규격](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/)
