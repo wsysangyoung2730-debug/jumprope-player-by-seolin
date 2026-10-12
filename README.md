@@ -55,3 +55,5 @@ Mac 단축키: Space 재생/정지, Enter 싱크 기록, ⌘Z 또는 Esc 싱크 
 ## App Store 배포
 
 배포 설정·수정 사항·확인 결과와 제출 전 남은 항목은 [배포 점검 기록](Docs/APP_STORE_RELEASE.md)에 정리되어 있습니다.
+
+앱스토어 이미지와 등록 문구는 [미리보기 안내](Marketing/AppStore/README.md), 사용자 지원은 [지원 안내](Docs/SUPPORT.md)를 참고하세요.
