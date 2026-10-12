@@ -54,6 +54,8 @@ Mac 단축키: Space 재생/정지, Enter 싱크 기록, ⌘Z 또는 Esc 싱크 
 
 ## App Store 배포
 
+App Store Connect 등록과 최신 업로드 상태는 [등록 기록](Docs/APP_STORE_UPLOAD.md)에 있습니다.
+
 서명된 Mac·iPad 제출 파일과 재제작 방법은 [서명·아카이브 안내](Docs/APP_STORE_SIGNING.md)에 있습니다.
 
 배포 설정·수정 사항·확인 결과와 제출 전 남은 항목은 [배포 점검 기록](Docs/APP_STORE_RELEASE.md)에 정리되어 있습니다.

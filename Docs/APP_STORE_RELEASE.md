@@ -1,6 +1,6 @@
 # App Store 배포 점검
 
-점검일: 2026-10-13. macOS가 기본 제품이며 iPadOS를 함께 제공한다. 개인정보보호 사이트의 제작·검증은 요청에 따라 제외했다. **로컬 코드·패키지 점검 통과와 App Store 심사 승인은 다르다.** 실제 App Store Connect 업로드나 심사는 진행하지 않았다.
+점검일: 2026-10-13. macOS가 기본 제품이며 iPadOS를 함께 제공한다. **로컬 코드·패키지 점검 통과와 App Store 심사 승인은 다르다.** 이슈 #28에서 두 플랫폼 업로드와 스토어 설정을 진행했다. 사용자 제공 사이트의 앱별 개인정보처리방침·지원 URL을 확인해 스토어와 앱 설정에 연결했다. 현재 상태는 [등록 기록](APP_STORE_UPLOAD.md)에 정리한다. 실제 심사 요청과 출시는 진행하지 않았다.
 
 ## 수정한 문제
 
@@ -23,16 +23,16 @@
 - iPadOS 기기용 Release archive 성공: iPadOS 17+, arm64, 기기 종류 iPad만([2]), 버전/빌드/PrivacyInfo/dSYM 확인.
 - 생성된 Release 실행 파일에 `--qa-demo` 및 캡처용 데이터 생성 코드가 들어가지 않는다.
 - App Sandbox 권한은 사용자가 고른 파일 읽기·쓰기 및 북마크로 제한된다. 별도 네트워크 클라이언트, 카메라, 마이크, 사진 보관함, 위치, 추적 권한을 요청하지 않는다.
-- 앱 코드는 Apple 제공 프레임워크만 사용한다. 광고·분석·외부 SDK, 결제, 로그인, 원격 코드 다운로드가 없다. 외부 링크는 시스템 브라우저로 Instagram을 연다.
+- 앱 코드는 Apple 제공 프레임워크만 사용한다. 광고·분석·외부 SDK, 결제, 로그인, 원격 코드 다운로드가 없다. 외부 링크는 시스템 브라우저로 개인정보처리방침·지원 사이트·Instagram을 연다.
 - 컴파일 오류 없음. AppIntents 미사용에 따른 메타데이터 추출 생략 경고만 있다.
 
-초기 무서명 검증용 아카이브는 `BuildArtifacts/JumpRopePlayer-macOS.xcarchive`, `BuildArtifacts/JumpRopePlayer-iPadOS.xcarchive`에 보관한다. 후속 이슈 #26에서 계정 서명 아카이브와 Apple Distribution 서명 PKG·IPA를 **`BuildArtifacts/AppStore-1.0.0-build1/`**에 새로 만들었다. 제출에는 새 파일을 사용한다. [서명 설정·산출물·확인 결과](APP_STORE_SIGNING.md)를 참고한다.
+초기 무서명 검증용 아카이브는 `BuildArtifacts/JumpRopePlayer-macOS.xcarchive`, `BuildArtifacts/JumpRopePlayer-iPadOS.xcarchive`에 보관한다. 후속 이슈 #26에서 계정 서명 아카이브와 Apple Distribution 서명 PKG·IPA를 **`BuildArtifacts/AppStore-1.0.0-build1/`**에 새로 만들었다. 현재 제출에는 이슈 #28의 `BuildArtifacts/AppStore-Connect-1.0.0-build2/` 파일을 사용한다. [서명 설정·산출물·확인 결과](APP_STORE_SIGNING.md)를 참고한다.
 
 ## 제출 전에 남은 실제 확인
 
-1. 개발자 팀·배포 인증서·Mac/iPad App Store 프로비저닝 연결과 최종 파일 서명 검증을 완료했다. App Store Connect에서 `com.seolin.jumpropeplayer`에 맞는 macOS·iOS 앱 레코드를 연결하고 계정의 계약 상태를 확인한다. 앱 레코드 등록·계약 상태는 아직 확인하지 않았다.
-2. 준비된 서명 아카이브에서 Distribute App → App Store Connect → Validate/Upload를 실행하거나, 내보낸 PKG·IPA를 Transporter로 업로드한다. 로컬 서명·프로비저닝 검증과 Apple 서버 검증은 별개다. 같은 버전·플랫폼으로 이미 업로드한 빌드를 다시 제출하면 빌드 번호를 올린다.
-3. 제공한 지원 문서 URL과 운영 연락처, 가격·판매 지역, 연령 등급 설문, 콘텐츠 권리, App Privacy(현재 구현은 데이터 수집 안 함)를 실제 운영 정보에 맞게 등록한다. 지원 연락처를 임의로 만들지 않았다. 개인정보보호 사이트/URL은 이번 범위 밖이다. 실제 정책 URL이 준비되면 App Store Connect와 앱 내 설정의 정책 링크도 연결해야 한다. 현재 앱에 외부 정책 링크를 임의로 넣지 않았다.
+1. 계정 서명·프로비저닝과 두 플랫폼 빌드 2의 패키지 검증·Apple 업로드를 완료했다. 앱 레코드 Apple ID는 `6822076754`이며 Bundle ID는 `com.seolin.jumpropeplayer`다.
+2. 한국어 스크린샷 각 5장과 설명·키워드·저작권·지원 URL, 연령 등급, 무료 가격·판매 지역, 로그인 불필요 및 수동 출시를 설정했다. 현재 버전 연결·심사 전 검증 결과는 [등록 기록](APP_STORE_UPLOAD.md)에 남긴다. 재업로드 시 빌드 번호를 올린다.
+3. App Privacy는 데이터 미수집으로 답했으며, 사용자의 명시적 동의 후 게시했다. 개인정보처리방침은 https://seolin-apps-site.vercel.app/jumprope-player/privacy/ 이고 앱 설정에도 연결했다. 웹사이트의 운영·방침 변경 관리는 해당 사이트에서 별도로 진행한다.
 4. 실제 iPad의 파일 앱·iCloud Drive·외장 저장장치 재연결, Bluetooth/전화 인터럽트, 장시간 수업을 확인한다. Intel Mac은 Universal 컴파일만 확인했고 실기기 실행은 하지 않았다. 관련 후속 검증은 이슈 #9에 남아 있다.
 5. MKV/WEBM/OGG 등은 확장자 가져오기를 허용하지만 코덱에 따라 재생되지 않을 수 있다. 스토어 문구에서 모든 형식 지원을 보장하지 않는다. 기본 권장 형식은 MP3/M4A/WAV, H.264·HEVC MP4/MOV다.
 

@@ -32,6 +32,9 @@ struct SettingsView: View {
                 Section {
                     Text("JUMPROPE PLAYER by SEOLIN").font(.headline)
                     Text("음악과 동작을 연결하는 줄넘기 연습 공간").font(.caption).foregroundStyle(.secondary)
+                    Link("개인정보처리방침",destination:URL(string:"https://seolin-apps-site.vercel.app/jumprope-player/privacy/")!)
+                    Link("사용 안내 및 지원",destination:URL(string:"https://seolin-apps-site.vercel.app/jumprope-player/support/")!)
+                    Text("2026 SEOLIN. All rights reserved.").font(.caption).foregroundStyle(.secondary)
                     Link("서린태권도 Instagram",destination:URL(string:"https://www.instagram.com/seolin5_tkd/")!)
                 }
             }.formStyle(.grouped).focusedValue(\.editingRoutineText, true)

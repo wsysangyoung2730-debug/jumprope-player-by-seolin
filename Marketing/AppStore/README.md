@@ -31,13 +31,13 @@ python3 Scripts/verify_store_screenshots.py
 
 캡처용 `App/Development/StoreCapture.swift`는 Debug에만 포함된다. 앱을 `--store-capture --store-page 0`으로 실행하면 별도 임시 라이브러리로 5장을 생성한다. `--store-page 1`~`5`는 개별 촬영이다. 결과는 캡처 앱의 Documents/StoreCaptures에 저장된다. 실제 화면이 나타난 후 촬영되므로 Mac 앱은 활성화되어 있어야 한다. 촬영용 Bundle ID는 `com.seolin.jumpropeplayer.storecapture`이며 본 앱 저장소와 분리된다. iPad는 iPad Pro 13인치 시뮬레이터의 세로 화면이다. 원본 화면이 바뀌면 다시 촬영한 뒤 렌더링한다.
 
-## 등록 문구 초안
+## 등록한 한국어 문구
 
 - 앱 이름: JUMPROPE PLAYER by SEOLIN
 - 부제: 음악과 동작을 연결하는 줄넘기 연습
 - 키워드: 줄넘기,음악줄넘기,순서표,구간반복,음악,영상,연습,싱크,태권도,수업,플레이어
-- 카테고리: 음악 (배포 설정 기준)
-- 지원 URL: https://github.com/wsysangyoung2730-debug/jumprope-player-by-seolin/blob/develop/Docs/SUPPORT.md
+- 카테고리: 음악 / 스포츠
+- 지원 URL: https://seolin-apps-site.vercel.app/jumprope-player/support/
 
 ### 설명
 
@@ -53,6 +53,6 @@ python3 Scripts/verify_store_screenshots.py
 
 ## 배포 확인
 
-코드 수정, Release 아카이브 확인 결과, 계정·실기기에서 남은 확인 사항은 `Docs/APP_STORE_RELEASE.md`를 참고한다. 개인정보보호 사이트는 이번 작업 범위에 포함하지 않는다. 지원 URL과 설명은 제공했지만 App Store Connect에는 아직 등록하지 않았다.
+두 플랫폼의 한국어 스크린샷 각 5장과 위 설명을 App Store Connect 앱 `6822076754`에 등록했다. 저작권은 `2026 SEOLIN. All rights reserved.`이며 개인정보처리방침은 https://seolin-apps-site.vercel.app/jumprope-player/privacy/ 이다. 업로드·버전 연결·남은 항목은 [등록 기록](../../Docs/APP_STORE_UPLOAD.md), 코드 점검과 실기기 확인 항목은 [배포 점검](../../Docs/APP_STORE_RELEASE.md)을 참고한다.
 
 [Apple 공식 이미지 규격](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/)

@@ -14,7 +14,7 @@
 
 ## 파일 위치
 
-저장소의 `BuildArtifacts/AppStore-1.0.0-build1/`에 다음 파일이 있다. 이 폴더는 Git에서 제외한다. 바탕화면의 `JUMPROPE_AppStore_제출용_1.0.0-build1` 바로가기도 같은 폴더를 가리킨다.
+아래는 이슈 #26에서 처음 만든 빌드 1 기록이다. 현재 업로드한 제출 파일은 이슈 #28의 **`BuildArtifacts/AppStore-Connect-1.0.0-build2/`**이며, 바탕화면 `JUMPROPE_AppStore_제출용_1.0.0-build2` 바로가기로 열 수 있다. 상세 상태는 [App Store Connect 등록 기록](APP_STORE_UPLOAD.md)을 참고한다. 산출물 폴더는 Git에서 제외한다.
 
 | 제품 | Xcode 아카이브 | 최종 App Store 제출 파일 |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ Mac만 생성하려면 `Scripts/archive_app_store.sh macOS`, iPad만 생성하�
 2. `.xcarchive`를 Xcode에서 열고 Distribute App → App Store Connect에서 서버 검증·업로드를 진행하거나, 최종 PKG·IPA를 Transporter로 업로드한다.
 3. 처리 완료 후 플랫폼별 버전에서 빌드를 선택한다. 등록 정보·지원/정책 URL 등 제출 항목을 완료한 후 심사 요청한다.
 
-이번 작업은 제출 파일 준비까지다. **앱 레코드 등록, 업로드, Apple 서버 검증, 심사 제출·출시는 진행하지 않았다.** 계정 계약 상태·스토어 메타데이터·실기기 검증은 별도다. 개인정보보호 사이트는 기존 요청대로 범위에서 제외했다. 세부 사항은 [배포 점검](APP_STORE_RELEASE.md)을 참고한다.
+이슈 #26은 제출 파일 준비까지 진행했다. 이후 이슈 #28에서 앱 레코드 등록, Mac·iPad 빌드 업로드, 한국어 이미지·문구와 개인정보처리방침 연결을 진행했다. 최신 결과는 [등록 기록](APP_STORE_UPLOAD.md)에 있다. 실제 심사 제출·출시는 진행하지 않았다. 실기기 확인 항목은 [배포 점검](APP_STORE_RELEASE.md)에 남아 있다.
 
 ## Apple 문서
 
